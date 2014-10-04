@@ -1,4 +1,6 @@
 # android eclipse
+.git
+.metadata
 andrcvcli/.metadata
 andrcvcli/andrcvs/bin/
 

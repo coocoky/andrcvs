@@ -1,1 +1,0 @@
-INDEX VERSION 1.126+D:\githubprjs\andrcvs\.metadata\.plugins\org.eclipse.jdt.core
