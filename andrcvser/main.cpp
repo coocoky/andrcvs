@@ -14,7 +14,7 @@
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 
-#include <mcvfun.h>
+#include "mcvfun.h"
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -32,7 +32,6 @@ void  local_ipv4(string  &str_json_ipv4)
 {
 
     boost::asio::io_service io_service;
-
     tcp::resolver resolver(io_service);
     tcp::resolver::query query(boost::asio::ip::host_name(),"");
     tcp::resolver::iterator it=resolver.resolve(query);
@@ -166,10 +165,14 @@ public:
 
         string        img_fn;
         string        img_path;
+        char          ch_buf[1024];
 
         while (true)
         {
-            file_list >> img_fn ;
+            //file_list >> img_fn ;
+            file_list.getline(ch_buf, 1000);
+            ch_buf[1000] = '\0';
+            img_fn = ch_buf;
             if (file_list.good() == false ) break;
             //img_path = imgs_path + img_fn;
             paths.push_back(img_fn);

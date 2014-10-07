@@ -12601,3 +12601,86 @@
 1406122863 source:d:\andrcvsprjs\andrcvser\windows\winfcntl.cpp
 	<thrift/windows/WinFcntl.h>
 
+1410951915 source:d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_constants.cpp
+	"cvrpc_constants.h"
+
+1410951915 d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_constants.h
+	"cvrpc_types.h"
+
+1410951915 d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_types.h
+	<thrift/Thrift.h>
+	<thrift/TApplicationException.h>
+	<thrift/protocol/TProtocol.h>
+	<thrift/transport/TTransport.h>
+	<thrift/cxxfunctional.h>
+
+1410951915 source:d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_types.cpp
+	"cvrpc_types.h"
+	<algorithm>
+
+1410951915 source:d:\githubprjs\andrcvs\andrcvser\gencpp\trandata.cpp
+	"TranData.h"
+
+1410951915 d:\githubprjs\andrcvs\andrcvser\gencpp\trandata.h
+	<thrift/TDispatchProcessor.h>
+	"cvrpc_types.h"
+
+1412566893 source:d:\githubprjs\andrcvs\andrcvser\main.cpp
+	<opencv2/opencv.hpp>
+	<opencv2/nonfree/nonfree.hpp>
+	<iostream>
+	"boost/thread.hpp"
+	"boost/asio.hpp"
+	<boost/property_tree/ptree.hpp>
+	<boost/property_tree/json_parser.hpp>
+	"TranData.h"
+	<thrift/protocol/TBinaryProtocol.h>
+	<thrift/server/TSimpleServer.h>
+	<thrift/transport/TServerSocket.h>
+	<thrift/transport/TBufferTransports.h>
+	"mcvfun.h"
+
+1412434565 d:\githubprjs\andrcvs\andrcvser\mcvfun.h
+	<opencv2/opencv.hpp>
+	<opencv2/nonfree/nonfree.hpp>
+	<string>
+	<fstream>
+	<iostream>
+	<memory>
+	<functional>
+	<queue>
+	<map>
+	<vector>
+	<cstring>
+	<stdio.h>
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+	<iconv.h>
+
+1406122863 source:d:\githubprjs\andrcvs\andrcvser\windows\gettimeofday.cpp
+	<thrift/windows/GetTimeOfDay.h>
+	<thrift/thrift-config.h>
+	<time.h>
+
+1406122863 source:d:\githubprjs\andrcvs\andrcvser\windows\socketpair.cpp
+	<windows/SocketPair.h>
+	<thrift/Thrift.h>
+
+1406122863 d:\githubprjs\andrcvs\andrcvser\windows\socketpair.h
+	<Winsock2.h>
+	<thrift/thrift-config.h>
+
+1376575469 source:d:\githubprjs\andrcvs\andrcvser\windows\stdafx.cpp
+
+1406122863 source:d:\githubprjs\andrcvs\andrcvser\windows\twinsocksingleton.cpp
+	<thrift/windows/TWinsockSingleton.h>
+	<boost/assert.hpp>
+	<stdexcept>
+
+1406122863 source:d:\githubprjs\andrcvs\andrcvser\windows\winfcntl.cpp
+	<thrift/windows/WinFcntl.h>
+
+1412522570 source:d:\githubprjs\andrcvs\andrcvser\mcvfun.cpp
+	"mcvfun.h"
+

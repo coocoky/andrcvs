@@ -25,7 +25,7 @@
 #define  UDP_PORT  9092
 
 #define  VOCA_COLS   2000
-#define  ZOOM_SIZE   400
+#define  ZOOM_SIZE   240
 #define  MIN_IMG_WH  120
 #define  MIN_KPS     3
 

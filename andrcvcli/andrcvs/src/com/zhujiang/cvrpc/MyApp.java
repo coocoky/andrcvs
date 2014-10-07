@@ -1,8 +1,5 @@
 package com.zhujiang.cvrpc;
 
-/**
- * Created by hp400 on 2014/9/5.
- */
 import android.app.Application;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;

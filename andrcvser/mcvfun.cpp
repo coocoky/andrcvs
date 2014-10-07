@@ -1,4 +1,4 @@
-#include <mcvfun.h>
+#include "mcvfun.h"
 
 Mat  surf_hist_120(Mat  &image, Ptr<DescriptorExtractor>  &extractor, float angle, int  size_surf)
 {
@@ -78,8 +78,8 @@ void  calc_hist(Mat  &image, Mat &vocabulary, Ptr<FeatureDetector> detector, Mat
 
     resize(image, image_zoom, Size(width01, high01));
 
+    /*
     detector->detect(image_zoom, keyPoints01);
-
     for(uint32_t i=0; i<keyPoints01.size(); i++)
     {
         KeyPoint  myPoint;
@@ -88,23 +88,24 @@ void  calc_hist(Mat  &image, Mat &vocabulary, Ptr<FeatureDetector> detector, Mat
 
         if (myPoint.size >= MIN_KPS) keyPoints.push_back(myPoint);
     }
+    */
 
-    /*
+
     for (int y=10;  y<=high01-10;  y+=STEP)
     {
-            for(int x=10;  x<=width01-10; x+=STEP)
-            {
-                    KeyPoint  key_point;
+        for(int x=10;  x<=width01-10; x+=STEP)
+        {
+            KeyPoint  key_point;
 
-                    key_point.pt.x = x;
-                    key_point.pt.y = y;
-                    key_point.angle = 0;
-                    key_point.size = 20;
+            key_point.pt.x = x;
+            key_point.pt.y = y;
+            key_point.angle = 0;
+            key_point.size = 20;
 
-                    keyPoints.push_back(key_point);
-            }
+            keyPoints.push_back(key_point);
+        }
     }
-    */
+
 
     Mat  mat_query_descriptor;
 
@@ -191,7 +192,6 @@ void  opencv_llc_bow_Descriptor(Mat &image, Mat &vocabulary,  vector<KeyPoint> &
 
 void   list_images(vector<string>  &file_paths,  vector<string>  &image_paths)
 {
-
     int  size_files = file_paths.size();
 
     for (int i=0; i<size_files; i++)
@@ -205,7 +205,7 @@ void   list_images(vector<string>  &file_paths,  vector<string>  &image_paths)
             str_ext = str_path.substr(str_path.rfind('.') + 1);
         }
 
-        if (str_ext== "jpg" || str_ext== "jpeg" || str_ext== "png")  image_paths.push_back(str_path);
+        if (str_ext == "jpg" || str_ext == "jpeg" || str_ext == "png")  image_paths.push_back(str_path);
     }
 }
 
@@ -230,7 +230,7 @@ void  list_dirs( const string& directory, vector<string>  &entries)
 
         p_subdir =  opendir(str_path.c_str());
 
-        if (str_fn != "." && str_fn != ".."   &&  p_subdir)  entries.push_back(str_path);
+        if (str_fn != "." && str_fn != ".."  && p_subdir)  entries.push_back(str_path);
 
         if (p_subdir) closedir(p_subdir);
     }
@@ -264,7 +264,6 @@ void  list_files(vector<string>  &dir_paths, vector<string>  &file_paths)
         }
 
         if (p_dir) closedir(p_dir);
-
     }
 }
 
