@@ -1,7 +1,18 @@
-#include <opencv2/opencv.hpp>
-#include <opencv2/nonfree/nonfree.hpp>
+#include "wx/wxprec.h"
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+#ifndef WX_PRECOMP
+#include "wx/wx.h"
+#endif
+#include "wx/thread.h"
+#include <wx/cmdline.h>
 
+#include <algorithm>
+#include <functional>
 #include <iostream>
+#include <vector>
 
 #include "boost/thread.hpp"
 #include "boost/asio.hpp"
@@ -11,12 +22,25 @@
 #include "TranData.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadPoolServer.h>
+#include <thrift/server/TNonblockingServer.h>
 #include <thrift/transport/TServerSocket.h>
+#include <thrift/transport/TServerTransport.h>
 #include <thrift/transport/TBufferTransports.h>
 
+#include <thrift/protocol/TDebugProtocol.h>
+#include <thrift/concurrency/ThreadManager.h>
+//#include <thrift/concurrency/PosixThreadFactory.h>
+#include <thrift/concurrency/BoostThreadFactory.h>
+
 #include "mcvfun.h"
+#include "MyApp.h"
+
+#include <stdio.h>
+#include <conio.h>
 
 using namespace ::apache::thrift;
+using namespace ::apache::thrift::concurrency;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
 using namespace ::apache::thrift::server;
@@ -27,6 +51,21 @@ using namespace std;
 using namespace cv;
 using namespace  ::cvrpc;
 using boost::asio::ip::tcp;
+
+// [vocabulary] [images_dir] [result_dir]
+static const wxCmdLineEntryDesc cmdLineDesc[] =
+{
+    { wxCMD_LINE_SWITCH, "h", "help", "show this help message", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+    { wxCMD_LINE_SWITCH,  NULL, "setup", "setup switch" },
+    { wxCMD_LINE_SWITCH,  NULL, "run", "run server" },
+    { wxCMD_LINE_OPTION,  NULL, "vocabulary",  "The file of vocabulary", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+    { wxCMD_LINE_OPTION,  NULL, "images",  "The directory of images", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+    { wxCMD_LINE_OPTION,  NULL, "result",  "The directory of result", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+    { wxCMD_LINE_OPTION,  NULL, "charset",  "Locale charset", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+
+    { wxCMD_LINE_NONE }
+};
+
 
 void  local_ipv4(string  &str_json_ipv4)
 {
@@ -69,6 +108,8 @@ void  local_ipv4(string  &str_json_ipv4)
 
 void ser_udp()
 {
+    cout << "ser_udp" << endl;
+
     boost::asio::io_service io_service;
     boost::asio::ip::udp::socket udp_socket(io_service);
     boost::asio::ip::udp::endpoint local_add(boost::asio::ip::address::from_string("0.0.0.0"), UDP_PORT);
@@ -99,11 +140,22 @@ void ser_udp()
         catch(ptree_error & e)
         {
             cout << "json err " << endl;
+
             continue;
         }
 
-        cout << "recv:" << receive_buffer << endl;
-        //cout << "str_name:" << str_name << endl;
+        //cout << "recv:" << receive_buffer << endl;
+
+        string str_txt = "recv: ";
+        str_txt +=  receive_buffer;
+
+        wxThreadEvent event( wxEVT_THREAD, WORKER_EVENT );
+
+        event.SetString(str_txt);
+
+        MyApp  &app = wxGetApp();
+        wxQueueEvent(&app, event.Clone());
+
 
         if (str_name != "cvrpc")
         {
@@ -124,59 +176,126 @@ void ser_udp()
     }
 }
 
+void  getch_console()
+{
+    while (true)
+    {
+        if (getch() == 27)
+        {
+            wxThreadEvent event( wxEVT_THREAD, THREAD_QUIT );
+            MyApp  &app = wxGetApp();
+            wxQueueEvent(&app, event.Clone());
+        }
+    }
+}
+
 class TranDataHandler : virtual public TranDataIf
 {
 private:
     Mat                   hists;
     vector<string>        paths;
     string                m_imgs_path;
+    string                m_str_charset;
 
-    Mat  vocabulary;
+    Mat   vocabulary;
+    Mat   voc_matchs;
 
     Ptr<FeatureDetector>       detector;
     Ptr<DescriptorExtractor>   extractor;
 
 public:
-    TranDataHandler(string voc_fn, string  imgs_path, string hists_fn, string  imgs_fn)
+    TranDataHandler(string voc_fn, string  imgs_path, string result_path, string str_charset)
     {
         // Your initialization goes here
 
-        std::string vocabularyFile =  voc_fn;
+        std::string   vocabulary_file =  voc_fn;
+        std::string   voc_matchs_fn = result_path + "/voc_matchs.xml.gz";
+        std::string   sqlite_fn = result_path + "/imgs.db";
 
         m_imgs_path = imgs_path;
+        m_str_charset = str_charset;
 
-        FileStorage fs( vocabularyFile, FileStorage::READ );
+        FileStorage fs( vocabulary_file, FileStorage::READ );
         if ( fs.isOpened() )  fs["vocabulary"] >> vocabulary;
 
-        std::cout << "vocabularyFile :  " << vocabularyFile << std::endl;
+        std::cout << "vocabulary_file :  " << vocabulary_file << std::endl;
         std::cout << "vocabulary rows cols = " << vocabulary.rows << "  " << vocabulary.cols << std::endl;
 
-        detector = FeatureDetector::create( "SURF" );
+        FileStorage fs_voc( voc_matchs_fn, FileStorage::READ );
+        if ( fs_voc.isOpened() )  fs_voc["voc_matchs"] >> voc_matchs;
+
+        std::cout << "voc_matchs rows cols = " << voc_matchs.rows << "  " << voc_matchs.cols << std::endl;
+
+        //detector = FeatureDetector::create( "SURF" );
         extractor = DescriptorExtractor::create( "SURF" );
 
-        FileStorage fs_hists( hists_fn, FileStorage::READ );
-        if ( fs_hists.isOpened() )  fs_hists["surf_hists"] >> hists;
+        //FileStorage fs_hists( hists_fn, FileStorage::READ );
+        //if ( fs_hists.isOpened() )  fs_hists["surf_hists"] >> hists;
 
-        std::cout << "hists rows cols = " << hists.rows << "  " << hists.cols << std::endl;
+        //fstream      file_list;
 
-        fstream      file_list;
-
-        file_list.open(imgs_fn.c_str(), ios::in);
+        //file_list.open(imgs_fn.c_str(), ios::in);
 
         string        img_fn;
         string        img_path;
         char          ch_buf[1024];
 
-        while (true)
+        sqlite3 *db = NULL;
+
+        sqlite3_stmt *stmt;
+
+        const char *zTail;
+
+        int result = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+
+        if (SQLITE_OK != result)
         {
-            //file_list >> img_fn ;
-            file_list.getline(ch_buf, 1000);
-            ch_buf[1000] = '\0';
-            img_fn = ch_buf;
-            if (file_list.good() == false ) break;
-            //img_path = imgs_path + img_fn;
-            paths.push_back(img_fn);
+            std::cout << "sqlite3_open error !!" << std::endl;
+
+            exit(-1);
         }
+
+        result = sqlite3_prepare(db,"SELECT * FROM imgs;", -1, &stmt, &zTail);
+        //result = sqlite3_prepare(db,"SELECT * FROM imgs WHERE id=3;", -1, &stmt, &zTail);
+        //result = sqlite3_prepare(db,"SELECT id, value, weight FROM test;", -1, &stmt, &zTail);
+
+        result = sqlite3_step(stmt);
+
+        while( result == SQLITE_ROW )
+        {
+            int id = sqlite3_column_int( stmt, 0 );
+            const char* path = (char*)sqlite3_column_text( stmt, 1 );
+
+            const void   *p_buf = sqlite3_column_blob(stmt, 2);
+            int  size_buf = sqlite3_column_bytes(stmt, 2);
+
+            //Mat hist = Mat::zeros(1, VOCA_COLS, CV_32F);
+            Mat hist = Mat::zeros(1, SIZE_VOC, CV_32F);
+
+            vector<float>   hist_data;
+            hist_data.resize(hist.cols);
+
+            char  *p_data = (char*)(&hist_data[0]);
+
+            memmove(p_data,  p_buf, size_buf);
+
+            for (int i=0; i<hist.cols; i++)
+            {
+                hist.at<float>(0, i) = hist_data[i];
+            }
+
+            //std::cout << "id : " << id << "  path : " << path << " hist.rows :" << hist.cols << std::endl;
+
+            paths.push_back(path);
+            hists.push_back(hist);
+
+            result = sqlite3_step(stmt);
+        }
+
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+
+        std::cout << "hists rows cols = " << hists.rows << "  " << hists.cols << std::endl;
     }
 
     void hello_string(std::string& _return, const std::string& para)
@@ -211,18 +330,38 @@ public:
         // Your implementation goes here
         //printf("read_image\n");
 
-        CodeConverter  cc("utf-8", char_lang);
-
         string  str_fn = "";
 
-        cc.convert_string(file_name, str_fn);
+        if (m_str_charset != "utf-8")
+        {
+            CodeConverter  cc("utf-8", m_str_charset.c_str());
+
+            cc.convert_string(file_name, str_fn);
+        }
+        else
+        {
+            str_fn = file_name;
+        }
 
         string  str_path = m_imgs_path + str_fn;
 
         Mat  img_src = imread(str_path, CV_LOAD_IMAGE_COLOR);
 
         //string  str_txt = str_fn.substr(m_imgs_path.length());
-        std::cout << "read image :  " << img_src.cols << "  " << img_src.rows << "  " << str_fn << std::endl;
+        //std::cout << "read image :  " << img_src.cols << "  " << img_src.rows << "  " << str_fn << std::endl;
+
+        char   chbuf[1024];
+
+        snprintf(chbuf, 1000, "read image :  %d  %d  %s", img_src.cols, img_src.rows, str_fn.c_str());
+
+        chbuf[1000] = '\0';
+
+        wxThreadEvent event( wxEVT_THREAD, WORKER_EVENT );
+
+        event.SetString(chbuf);
+
+        MyApp  &app = wxGetApp();
+        wxQueueEvent(&app, event.Clone());
 
         if (!img_src.data)
         {
@@ -273,9 +412,13 @@ public:
 
         //Mat  hist01 = surf_hist_120(image_120_01, extractor, 0.0, 30);
 
-        Mat  hist01 = Mat::zeros(1, VOCA_COLS, CV_32F);
+        //Mat  hist01 = Mat::zeros(1, VOCA_COLS, CV_32F);
+        Mat  hist01 = Mat::zeros(1, SIZE_VOC, CV_32F);
 
-        calc_hist(image01, vocabulary, detector, hist01);
+        //bool ret = calc_hist(image01, vocabulary, detector, hist01);
+        bool ret = voc_hist(image01, vocabulary, voc_matchs, hist01);
+
+        if (ret == false) return;
 
         int     mknn = 9;
         //float   fbeta = 1e-4;
@@ -287,7 +430,7 @@ public:
 
         matcher -> knnMatch( hist01, hists, matches, mknn );
 
-        CodeConverter  cc(char_lang, "utf-8");
+        CodeConverter  cc(m_str_charset.c_str(), "utf-8");
 
         for (int n=0; n<mknn; n++)
         {
@@ -301,14 +444,34 @@ public:
 
             string   str_utf8_fn = "";
 
-            cc.convert_string(str_fn, str_utf8_fn);
+            if (m_str_charset == "utf-8")
+            {
+                str_utf8_fn = str_fn;
+            }
+            else
+            {
+                cc.convert_string(str_fn, str_utf8_fn);
+            }
 
             //if (distance > 0.80) _return.push_back(str_fn);
 
             //int cols = image01.cols;
             //int rows = image01.rows;
 
-            std::cout << "image match :  " << image01.cols << "  " << image01.rows << "  " << distance << std::endl;
+            //std::cout << "image match :  " << image01.cols << "  " << image01.rows << "  " << distance << std::endl;
+
+            char   chbuf[1024];
+
+            snprintf(chbuf, 1000, "image match :  %d  %d  %f", image01.cols, image01.rows, distance);
+
+            chbuf[1000] = '\0';
+
+            wxThreadEvent event( wxEVT_THREAD, WORKER_EVENT );
+
+            event.SetString(chbuf);
+
+            MyApp  &app = wxGetApp();
+            wxQueueEvent(&app, event.Clone());
 
             _return.push_back(str_utf8_fn);
         }
@@ -319,35 +482,78 @@ void help( const char* pro_name )
 {
     std::cout << "OpenCV Thrift RPC Server..." << std::endl << std::endl;
 
-    std::cout << "setup: " << pro_name << " setup [vocabulary] [images_dir] [result_dir] " << std::endl;
-    std::cout << "example: " << pro_name << " setup  ./vocabulary_surf.xml.gz  ../data/images01/  ../data/result/" << std::endl;
+    std::cout << "setup: " << pro_name << " setup [vocabulary file] [images dir] [result dir] " << std::endl;
+    std::cout << "example: " << pro_name << " --setup  --vocabulary=./vocabulary.xml.gz   --images=../data/images01/  --result=../data/result01/" << std::endl;
 
     std::cout << std::endl;
 
-    std::cout << "run: " << pro_name << " run [vocabulary] [images_dir] [result_dir] " << std::endl;
-    std::cout << "example: " << pro_name << " run  ./vocabulary_surf.xml.gz  ../data/images01/  ../data/result/" << std::endl;
+    std::cout << "run: " << pro_name << " run [vocabulary file] [images dir] [result dir] " << std::endl;
+    std::cout << "example: " << pro_name << " --run  --vocabulary=./vocabulary.xml.gz   --images=../data/images01/  --result=../data/result01/" << std::endl;
 }
 
-void  setup(char* argv[])
+/*
+wxThread::ExitCode MyThread::Entry()
 {
-    string  voc_fn = argv[2];
-    string  imgs_path = argv[3];
-    string  result_path = argv[4];
+    shared_ptr<TranDataHandler> handler(new TranDataHandler(voc_fn, imgs_path, result_path));
+    shared_ptr<TProcessor> processor(new TranDataProcessor(handler));
+    shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+    shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
+    shared_ptr<TServerTransport> serverTransport(new TServerSocket(RPC_PORT));
 
-    string  hists_fn = result_path + "/hists.xml.gz";
-    string  imgs_fn = result_path + "/images.list";
 
-    fstream          fs_list;
+    shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(16);
+    //shared_ptr<PosixThreadFactory> threadFactory = shared_ptr<PosixThreadFactory> (new PosixThreadFactory());
+    shared_ptr<BoostThreadFactory> threadFactory = shared_ptr<BoostThreadFactory> (new BoostThreadFactory());
+    threadManager->threadFactory(threadFactory);
+    threadManager->start();
+
+    shared_ptr<TNonblockingServer> server(new TNonblockingServer(processor, protocolFactory, RPC_PORT, threadManager));
+    server->serve();
+}
+*/
+
+void  cvrpc_server(wxString voc_fn01, wxString  imgs_path01, wxString result_path01, wxString charset01)
+{
+    string   voc_fn; voc_fn = voc_fn01.mb_str();
+    string   imgs_path; imgs_path = imgs_path01.mb_str();
+    string   result_path; result_path = result_path01.mb_str();
+    string   str_charset; str_charset = charset01.mb_str();
+
+    shared_ptr<TranDataHandler> handler(new TranDataHandler(voc_fn, imgs_path, result_path, str_charset));
+    shared_ptr<TProcessor> processor(new TranDataProcessor(handler));
+    shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+    shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
+    shared_ptr<TServerTransport> serverTransport(new TServerSocket(RPC_PORT));
+
+    shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(16);
+    shared_ptr<BoostThreadFactory> threadFactory = shared_ptr<BoostThreadFactory> (new BoostThreadFactory());
+    threadManager->threadFactory(threadFactory);
+    threadManager->start();
+
+    shared_ptr<TNonblockingServer> server(new TNonblockingServer(processor, protocolFactory, RPC_PORT, threadManager));
+    server->serve();
+}
+
+void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
+{
+    string  voc_fn; voc_fn = voc_fn01.mb_str();
+    string  imgs_path; imgs_path = imgs_path01.mb_str();
+    string  result_path; result_path = result_path01.mb_str();
+
+    string  sqlite_fn = result_path + "/imgs.db";
+    string  voc_matchs_fn = result_path + "/voc_matchs.xml.gz";
+
+    //fstream          fs_list;
     vector<string>   sub_dirs;
     vector<string>   file_paths;
     vector<string>   image_paths;
     vector<string>   imgs_list;
 
-    #ifdef _WIN32
-        mkdir(result_path.c_str());
-    #else
-        mkdir(result_path.c_str(), 0755);
-    #endif
+#ifdef _WIN32
+    mkdir(result_path.c_str());
+#else
+    mkdir(result_path.c_str(), 0755);
+#endif
 
     list_dirs(imgs_path, sub_dirs);
 
@@ -360,9 +566,11 @@ void  setup(char* argv[])
 
     cout << endl;
 
+    create_imgs_db(sqlite_fn);
+
     std::string vocabularyFile =  voc_fn;
 
-    Mat  vocabulary;
+    Mat   vocabulary;
 
     FileStorage fs( vocabularyFile, FileStorage::READ );
     if ( fs.isOpened() )  fs["vocabulary"] >> vocabulary;
@@ -370,17 +578,82 @@ void  setup(char* argv[])
     std::cout << "vocabularyFile :  " << vocabularyFile << std::endl;
     std::cout << "vocabulary rows cols = " << vocabulary.rows << "  " << vocabulary.cols << std::endl;
 
-    Ptr<FeatureDetector> detector = FeatureDetector::create( "SURF" );
+    int  size_voc = SIZE_VOC;
+
+    cout << "build vocabulary..." << endl;
+    BOWKMeansTrainer bowTrainer( size_voc );
+    Mat voc = bowTrainer.cluster( vocabulary );
+    cout << "done build voc..." << endl;
+
+    std::cout << "voc rows cols = " << voc.rows << "  " << voc.cols << std::endl;
+
+    int     knn = KNN;
+    float   fbeta = 1e-4;
+
+    vector<vector<DMatch> > matches;
+
+    Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create( "BruteForce" );
+    //Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create( "FlannBased" );
+
+    matcher -> knnMatch( voc, vocabulary, matches, knn );
+
+    Mat  voc_matchs = Mat::zeros(voc.rows, knn, CV_32S);
+
+    //Mat  hist = Mat::zeros(1, size_voc, CV_32F);
+
+    for (int n=0; n<voc.rows; n++)
+    {
+        vector<DMatch> &matchesv1 = matches[n];
+
+        for (int i=0; i<knn; i++)
+        {
+            int  idx01 = matchesv1[i].trainIdx;
+
+            //hist.at<float>(0, n) += sum_query_descriptor01.at<float>(0, idx01);
+
+            voc_matchs.at<int>(n, i) = matchesv1[i].trainIdx;
+
+            //std::cout << idx01 << ", ";
+        }
+
+        //std::cout << std::endl;
+    }
+
+    FileStorage fs_voc( voc_matchs_fn, FileStorage::WRITE );
+    if ( fs.isOpened() ) fs_voc << "voc_matchs" << voc_matchs;
+
+    std::cout << "voc_matchs rows cols = " << voc_matchs.rows << "  " << voc_matchs.cols << std::endl;
+
+    //Ptr<FeatureDetector> detector = FeatureDetector::create( "SURF" );
     Ptr<DescriptorExtractor> extractor = DescriptorExtractor::create( "SURF" );
 
     list_files(sub_dirs,  file_paths);
     list_images(file_paths,  image_paths);
 
-    fs_list.open(imgs_fn.c_str(), ios::out);
+    //fs_list.open(imgs_fn.c_str(), ios::out);
 
     int  size_images = image_paths.size();
 
-    Mat  descriptors;
+    sqlite3_stmt *stmt;
+    char ca[255];
+
+    char *errmsg = 0;
+    int   ret = 0;
+
+    sqlite3 *db = 0;
+    ret = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+
+    if(ret != SQLITE_OK)
+    {
+        fprintf(stderr,"Cannot open db: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    printf("Open database\n");
+
+    vector<float>  hist_data;
+
+    Mat  hist = Mat::zeros(1, VOCA_COLS, CV_32F);
 
     for (int i=0; i<size_images; i++)
     {
@@ -392,75 +665,127 @@ void  setup(char* argv[])
         Mat image = imread(str_path,  CV_LOAD_IMAGE_GRAYSCALE);
         //Mat image = imread(str_path,  CV_LOAD_IMAGE_COLOR);
 
+        //if (image.data == 0 ) continue;
         if (image.data == 0 || image.cols < MIN_IMG_WH || image.rows < MIN_IMG_WH) continue;
 
-        fs_list << str_fn << endl;
+        //fs_list << str_fn << endl;
 
         //Mat image_120; //= Mat::zeros( 120, 120, CV_8UC1);
         //resize(image01, image_120, Size(120, 120));
         //Mat  hist01 = surf_hist_120(image_120, extractor, 0.0, 30);
 
-        Mat hist = Mat::zeros(1, VOCA_COLS, CV_32F);
-        calc_hist(image, vocabulary, detector, hist);
-        descriptors.push_back(hist);
+        //hist = Mat::zeros(1, VOCA_COLS, CV_32F);
+        //bool ret = calc_hist(image, vocabulary, detector, hist);
+
+        hist = Mat::zeros(1, SIZE_VOC, CV_32F);
+        bool ret = voc_hist(image, vocabulary, voc_matchs, hist);
+
+        if (ret == false) continue;
+
+        //descriptors.push_back(hist);
+
+        sqlite3_prepare_v2(db,"insert into imgs(id, path, hist) values(null,?,?)", -1, &stmt, 0);
+
+        sqlite3_bind_text(stmt, 1, str_fn.c_str(), str_fn.length() , NULL);
+
+        hist_data.clear();
+        hist_data.resize(hist.cols);
+
+        for (int i=0; i<hist.cols; i++)
+        {
+            hist_data[i] = hist.at<float>(0, i);
+        }
+
+        char   *p_buf = (char*)(&hist_data[0]);
+
+        sqlite3_bind_blob(stmt, 2, p_buf, hist.cols*sizeof(float), NULL);
+
+        sqlite3_step(stmt);
+
+        //if (ret != SQLITE_OK) fprintf(stderr,"db: %s\n",sqlite3_errmsg(db));
+
+        sqlite3_reset(stmt);
     }
 
-    FileStorage fs_hists( hists_fn, FileStorage::WRITE );
-    if ( fs_hists.isOpened() )  fs_hists << "surf_hists" << descriptors;
-}
+    //FileStorage fs_hists( hists_fn, FileStorage::WRITE );
+    //if ( fs_hists.isOpened() )  fs_hists << "surf_hists" << descriptors;
 
-void  run_ser(char* argv[])
-{
-#ifdef _WIN32
-    WORD wVersionRequested;
-    WSADATA wsaData;
-    int err;
-    wVersionRequested =MAKEWORD( 2, 2 );
-    err = WSAStartup( wVersionRequested, &wsaData );
-    if ( err ) { std::cout << "winsock error !!" << std::endl; exit(-1); }
-#endif
+    sqlite3_finalize(stmt);
 
-    string  voc_fn = argv[2];
-    string  imgs_path = argv[3];
-    string  result_path = argv[4];
+    sqlite3_free(errmsg);
+    sqlite3_close(db);
 
-    string  hists_fn = result_path + "/hists.xml.gz";
-    string  imgs_fn = result_path + "/images.list";
-
-    boost::thread thrd(&ser_udp);
-
-    shared_ptr<TranDataHandler> handler(new TranDataHandler(voc_fn, imgs_path, hists_fn, imgs_fn));
-    shared_ptr<TProcessor> processor(new TranDataProcessor(handler));
-    shared_ptr<TServerTransport> serverTransport(new TServerSocket(RPC_PORT));
-    shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
-    shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
-
-    TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
-    server.serve();
+    printf("Close database\n");
 }
 
 int main(int argc, char **argv)
 {
     cv::initModule_nonfree();
 
-    if ( argc < 2)
+    wxApp::CheckBuildOptions(WX_BUILD_OPTIONS_SIGNATURE, "program");
+
+    wxInitializer initializer;
+
+    if ( !initializer )
     {
-        help( argv[0] );
+        fprintf(stderr, "Failed to initialize the wxWidgets library, aborting.");
         return -1;
     }
 
-    string  str_cmd = argv[1];
 
-    if (str_cmd == "setup")
+#ifdef _WIN32
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    int err;
+    wVersionRequested = MAKEWORD( 2, 2 );
+    err = WSAStartup( wVersionRequested, &wsaData );
+    if ( err )
     {
-        setup(argv);
-        return 0;
+        std::cout << "winsock error !!" << std::endl;
+        exit(-1);
     }
+#endif
 
-    if (str_cmd == "run")
+    if (argc == 1) { help(argv[0]); return -1; }
+
+    wxString  wstr_cml01 = wxEmptyString;
+    wxString  wstr_cml02 = wxEmptyString;
+    wxString  wstr_cml03 = wxEmptyString;
+    wxString  wstr_cml04 = wxEmptyString;
+
+    wxCmdLineParser parser(cmdLineDesc, argc, argv);
+
+    if ( parser.Parse() == 0)
     {
-        run_ser(argv);
-        return 0;
+        if (parser.Found("setup") && parser.Found("vocabulary", &wstr_cml01)
+              &&  parser.Found("images", &wstr_cml02) &&  parser.Found("result", &wstr_cml03))
+        {
+            //std::cout << str_cml01 << std::endl;
+            //std::cout << str_cml02 << std::endl;
+            //std::cout << str_cml03 << std::endl;
+
+            setup(wstr_cml01, wstr_cml02, wstr_cml03);
+        }
+
+        if (parser.Found("run") && parser.Found("vocabulary", &wstr_cml01)
+              &&  parser.Found("images", &wstr_cml02) &&  parser.Found("result", &wstr_cml03))
+        {
+            if ( parser.Found("charset", &wstr_cml04) == false )
+            {
+                wstr_cml04 = "utf-8";
+            }
+
+            boost::thread  thrd_udp(ser_udp);
+            boost::thread  thrd_con(getch_console);
+            boost::thread  thrd_cvrpc(cvrpc_server, wstr_cml01, wstr_cml02, wstr_cml03, wstr_cml04);
+
+            //MyThread  *p_thread = new MyThread(wstr_cml01, wstr_cml02, wstr_cml03);
+
+            MyApp  *myapp = new MyApp();
+
+            myapp->OnInit();
+            myapp->MainLoop();
+        }
     }
 
     return 0;

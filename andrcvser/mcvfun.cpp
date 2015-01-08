@@ -1,4 +1,5 @@
 #include "mcvfun.h"
+#include <stdio.h>
 
 Mat  surf_hist_120(Mat  &image, Ptr<DescriptorExtractor>  &extractor, float angle, int  size_surf)
 {
@@ -48,10 +49,10 @@ Mat  surf_hist_120(Mat  &image, Ptr<DescriptorExtractor>  &extractor, float angl
     return  hist;
 }
 
-void  calc_hist(Mat  &image, Mat &vocabulary, Ptr<FeatureDetector> detector, Mat &sum_query_descriptor)
+bool  calc_hist(Mat  &image, Mat &vocabulary,  Mat &sum_query_descriptor)
 {
     vector<KeyPoint> keyPoints;
-    vector<KeyPoint> keyPoints01;
+    //vector<KeyPoint> keyPoints01;
 
     int    width01;
     int    high01;
@@ -77,6 +78,8 @@ void  calc_hist(Mat  &image, Mat &vocabulary, Ptr<FeatureDetector> detector, Mat
     Mat    image_zoom = Mat::zeros( high01, width01, CV_8UC1);
 
     resize(image, image_zoom, Size(width01, high01));
+
+    if (high01 < ZOOM_SIZE/4 || width01 < ZOOM_SIZE/4) return false;
 
     /*
     detector->detect(image_zoom, keyPoints01);
@@ -123,6 +126,32 @@ void  calc_hist(Mat  &image, Mat &vocabulary, Ptr<FeatureDetector> detector, Mat
     sum_query_descriptor = sum_query_descriptor/(size_keys*1.0);
 
     sum_query_descriptor = sum_query_descriptor*1000.0;
+
+    return  true;
+}
+
+bool  voc_hist(Mat  &img_src,  Mat &vocabulary,  Mat &voc_matchs, Mat &voc_hist)
+{
+    Mat sum_query_descriptor = Mat::zeros(1, VOCA_COLS, CV_32F);
+
+    bool ret = calc_hist(img_src, vocabulary, sum_query_descriptor);
+
+    if (ret == false) return ret;
+
+    int  knn = voc_matchs.cols;
+
+    for (int n=0; n<voc_matchs.rows; n++)
+    {
+        for (int i=0; i<3; i++)
+        {
+            int  idx01 = voc_matchs.at<int>(n, i);
+
+            voc_hist.at<float>(0, n) += sum_query_descriptor.at<float>(0, idx01);
+
+        }
+    }
+
+    return true;
 }
 
 void  opencv_llc_bow_Descriptor(Mat &image, Mat &vocabulary,  vector<KeyPoint> &key_points, Mat &mat_llc_descriptor )
@@ -267,3 +296,33 @@ void  list_files(vector<string>  &dir_paths, vector<string>  &file_paths)
     }
 }
 
+
+void  create_imgs_db(string  &sqlite_fn)
+{
+    const char *sql_create_table="create table imgs(id INTEGER PRIMARY KEY AUTOINCREMENT, path text, hist blob)";
+    char *errmsg = 0;
+    int   ret = 0;
+
+    sqlite3 *db = 0;
+    ret = sqlite3_open(sqlite_fn.c_str(), &db);
+
+    if(ret != SQLITE_OK)
+    {
+        fprintf(stderr,"Cannot open db: %s\n",sqlite3_errmsg(db));
+        return;
+    }
+
+    printf("Open database\n");
+
+    ret = sqlite3_exec(db, sql_create_table, NULL, NULL, &errmsg);
+
+    if(ret != SQLITE_OK)
+    {
+        fprintf(stderr,"create table fail: %s\n",errmsg);
+    }
+
+    sqlite3_free(errmsg);
+    sqlite3_close(db);
+
+    printf("Close database\n");
+}

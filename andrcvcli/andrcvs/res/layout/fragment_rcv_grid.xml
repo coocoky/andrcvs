@@ -1,0 +1,37 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="fill_parent"
+    android:layout_height="fill_parent" tools:context="hp400.andrcvs.RcvGridFragment"
+    android:background="@android:color/white"
+    android:clickable="true"
+    android:id="@+id/frame_rcv"
+    android:foregroundGravity="fill">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:minHeight="300dp"
+        android:minWidth="300dp"
+        android:padding="@dimen/activity_horizontal_margin">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="fill_parent"
+            android:layout_height="320dp"
+            android:layout_gravity="top|center_horizontal"
+            android:maxHeight="320dp"
+            android:minHeight="300dp"
+            android:minWidth="400dp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="5px" />
+
+        <GridView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/gridView"
+            android:layout_gravity="top|center"
+            android:numColumns="3" />
+    </LinearLayout>
+</FrameLayout>
