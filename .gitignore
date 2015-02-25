@@ -6,7 +6,6 @@ andrcvcli/andrcvs/bin/
 
 # win32/mingw
 andrcvser/bin/
-andrcvser/data01/
 andrcvser/obj/
 
 # Windows image file caches

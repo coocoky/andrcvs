@@ -86,13 +86,14 @@ class CompratorByLastModified implements Comparator<File>
 public class MainActivity extends Activity {
 
     Bundle   mState;
-    Bitmap   bitmap_share;
+    //Bitmap   bitmap_share;
     Mat      mat_share;
     int      wt,ht;
 
     public Integer[] res_imgs = { R.drawable.image_0001, R.drawable.image_0002, R.drawable.image_0003,
             R.drawable.image_0004, R.drawable.image_0005, R.drawable.image_0006,
-            R.drawable.image_0007, R.drawable.image_0008, R.drawable.image_0009
+            R.drawable.image_0007, R.drawable.image_0008, R.drawable.image_0009,
+            R.drawable.image_0010, R.drawable.image_0011, R.drawable.image_0012
     };
 
 	
@@ -120,8 +121,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    private  void handleSendImage(Intent intent) {
-
+    private Bitmap handleSendImage(Intent intent) {
+        Bitmap   bitmap_share = null;
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         Toast.makeText(this, imageUri.toString(), Toast.LENGTH_LONG).show();
         ContentResolver cr = this.getContentResolver();
@@ -130,6 +131,7 @@ public class MainActivity extends Activity {
         } catch (FileNotFoundException e) {
             Log.e("Exception", e.getMessage(), e);
         }
+        return  bitmap_share;
     }
 
     public void  init_sd_imgs() {
@@ -173,7 +175,7 @@ public class MainActivity extends Activity {
                     init_sd_imgs();
 
                     mat_share = new Mat();
-                    bitmap_share = null;
+                    Bitmap   bitmap_share = null;
 
                     Intent intent = getIntent();
                     String action = intent.getAction();
@@ -183,27 +185,20 @@ public class MainActivity extends Activity {
                         if ("text/plain".equals(type)) {
                             handleSendText(intent);
                         } else if (type.startsWith("image/")) {
-                            handleSendImage(intent);
+                            bitmap_share = handleSendImage(intent);
                         }
                     }
+
+                    Fragment fragment =  new GalleryFragment();
 
                     if (bitmap_share != null) {
-
                         Utils.bitmapToMat(bitmap_share, mat_share);
-                        //my_app.mat_rgb = mat_show;
-                        Fragment fragment =  new RcvGridFragment();
-                        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                        transaction.replace(R.id.container, fragment);
-                        //transaction.addToBackStack(null);
-                        transaction.commit();
-                    } else {
-                        //init_view();
-                        if (mState == null) {
-                            getFragmentManager().beginTransaction()
-                                    .add(R.id.container, new GalleryFragment())
-                                    .commit();
-                        }
+                        fragment =  new RcvGridFragment();
                     }
+
+                    //if (mState == null) {
+                        getFragmentManager().beginTransaction().add(R.id.container, fragment).commit();
+                    //}
 
                 } break;
                 default:
@@ -234,9 +229,11 @@ public class MainActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+
         if (id == R.id.action_settings) {
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

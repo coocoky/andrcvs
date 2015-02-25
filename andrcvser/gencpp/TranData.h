@@ -16,10 +16,9 @@ class TranDataIf {
  public:
   virtual ~TranDataIf() {}
   virtual void hello_string(std::string& _return, const std::string& para) = 0;
-  virtual void read_data(std::string& _return, const std::string& name, const int32_t length) = 0;
   virtual void opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data) = 0;
   virtual void read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa) = 0;
-  virtual void image_match(std::vector<std::string> & _return, const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa) = 0;
+  virtual void image_match(std::vector<std::string> & _return, const std::string& img_data, const std::vector<std::string> & pa) = 0;
 };
 
 class TranDataIfFactory {
@@ -52,16 +51,13 @@ class TranDataNull : virtual public TranDataIf {
   void hello_string(std::string& /* _return */, const std::string& /* para */) {
     return;
   }
-  void read_data(std::string& /* _return */, const std::string& /* name */, const int32_t /* length */) {
-    return;
-  }
   void opencv_rpc(std::string& /* _return */, const std::string& /* fun_name */, const std::vector<std::string> & /* pa */, const std::string& /* in_data */) {
     return;
   }
   void read_image(std::string& /* _return */, const std::string& /* file_name */, const std::map<std::string, std::string> & /* pa */) {
     return;
   }
-  void image_match(std::vector<std::string> & /* _return */, const std::string& /* fun_name */, const std::string& /* img_data */, const std::vector<std::string> & /* pa */) {
+  void image_match(std::vector<std::string> & /* _return */, const std::string& /* img_data */, const std::vector<std::string> & /* pa */) {
     return;
   }
 };
@@ -184,133 +180,6 @@ class TranData_hello_string_presult {
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
   friend std::ostream& operator<<(std::ostream& out, const TranData_hello_string_presult& obj);
-};
-
-typedef struct _TranData_read_data_args__isset {
-  _TranData_read_data_args__isset() : name(false), length(false) {}
-  bool name :1;
-  bool length :1;
-} _TranData_read_data_args__isset;
-
-class TranData_read_data_args {
- public:
-
-  static const char* ascii_fingerprint; // = "EEBC915CE44901401D881E6091423036";
-  static const uint8_t binary_fingerprint[16]; // = {0xEE,0xBC,0x91,0x5C,0xE4,0x49,0x01,0x40,0x1D,0x88,0x1E,0x60,0x91,0x42,0x30,0x36};
-
-  TranData_read_data_args(const TranData_read_data_args&);
-  TranData_read_data_args& operator=(const TranData_read_data_args&);
-  TranData_read_data_args() : name(), length(0) {
-  }
-
-  virtual ~TranData_read_data_args() throw();
-  std::string name;
-  int32_t length;
-
-  _TranData_read_data_args__isset __isset;
-
-  void __set_name(const std::string& val);
-
-  void __set_length(const int32_t val);
-
-  bool operator == (const TranData_read_data_args & rhs) const
-  {
-    if (!(name == rhs.name))
-      return false;
-    if (!(length == rhs.length))
-      return false;
-    return true;
-  }
-  bool operator != (const TranData_read_data_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const TranData_read_data_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const TranData_read_data_args& obj);
-};
-
-
-class TranData_read_data_pargs {
- public:
-
-  static const char* ascii_fingerprint; // = "EEBC915CE44901401D881E6091423036";
-  static const uint8_t binary_fingerprint[16]; // = {0xEE,0xBC,0x91,0x5C,0xE4,0x49,0x01,0x40,0x1D,0x88,0x1E,0x60,0x91,0x42,0x30,0x36};
-
-
-  virtual ~TranData_read_data_pargs() throw();
-  const std::string* name;
-  const int32_t* length;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const TranData_read_data_pargs& obj);
-};
-
-typedef struct _TranData_read_data_result__isset {
-  _TranData_read_data_result__isset() : success(false) {}
-  bool success :1;
-} _TranData_read_data_result__isset;
-
-class TranData_read_data_result {
- public:
-
-  static const char* ascii_fingerprint; // = "9A73381FEFD6B67F432E717102246330";
-  static const uint8_t binary_fingerprint[16]; // = {0x9A,0x73,0x38,0x1F,0xEF,0xD6,0xB6,0x7F,0x43,0x2E,0x71,0x71,0x02,0x24,0x63,0x30};
-
-  TranData_read_data_result(const TranData_read_data_result&);
-  TranData_read_data_result& operator=(const TranData_read_data_result&);
-  TranData_read_data_result() : success() {
-  }
-
-  virtual ~TranData_read_data_result() throw();
-  std::string success;
-
-  _TranData_read_data_result__isset __isset;
-
-  void __set_success(const std::string& val);
-
-  bool operator == (const TranData_read_data_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const TranData_read_data_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const TranData_read_data_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const TranData_read_data_result& obj);
-};
-
-typedef struct _TranData_read_data_presult__isset {
-  _TranData_read_data_presult__isset() : success(false) {}
-  bool success :1;
-} _TranData_read_data_presult__isset;
-
-class TranData_read_data_presult {
- public:
-
-  static const char* ascii_fingerprint; // = "9A73381FEFD6B67F432E717102246330";
-  static const uint8_t binary_fingerprint[16]; // = {0x9A,0x73,0x38,0x1F,0xEF,0xD6,0xB6,0x7F,0x43,0x2E,0x71,0x71,0x02,0x24,0x63,0x30};
-
-
-  virtual ~TranData_read_data_presult() throw();
-  std::string* success;
-
-  _TranData_read_data_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-  friend std::ostream& operator<<(std::ostream& out, const TranData_read_data_presult& obj);
 };
 
 typedef struct _TranData_opencv_rpc_args__isset {
@@ -575,8 +444,7 @@ class TranData_read_image_presult {
 };
 
 typedef struct _TranData_image_match_args__isset {
-  _TranData_image_match_args__isset() : fun_name(false), img_data(false), pa(false) {}
-  bool fun_name :1;
+  _TranData_image_match_args__isset() : img_data(false), pa(false) {}
   bool img_data :1;
   bool pa :1;
 } _TranData_image_match_args__isset;
@@ -584,22 +452,19 @@ typedef struct _TranData_image_match_args__isset {
 class TranData_image_match_args {
  public:
 
-  static const char* ascii_fingerprint; // = "8E2AD6401E83558ECFD6A13D74DD0A3F";
-  static const uint8_t binary_fingerprint[16]; // = {0x8E,0x2A,0xD6,0x40,0x1E,0x83,0x55,0x8E,0xCF,0xD6,0xA1,0x3D,0x74,0xDD,0x0A,0x3F};
+  static const char* ascii_fingerprint; // = "25702B8D5E28AA39160F267DABBC8446";
+  static const uint8_t binary_fingerprint[16]; // = {0x25,0x70,0x2B,0x8D,0x5E,0x28,0xAA,0x39,0x16,0x0F,0x26,0x7D,0xAB,0xBC,0x84,0x46};
 
   TranData_image_match_args(const TranData_image_match_args&);
   TranData_image_match_args& operator=(const TranData_image_match_args&);
-  TranData_image_match_args() : fun_name(), img_data() {
+  TranData_image_match_args() : img_data() {
   }
 
   virtual ~TranData_image_match_args() throw();
-  std::string fun_name;
   std::string img_data;
   std::vector<std::string>  pa;
 
   _TranData_image_match_args__isset __isset;
-
-  void __set_fun_name(const std::string& val);
 
   void __set_img_data(const std::string& val);
 
@@ -607,8 +472,6 @@ class TranData_image_match_args {
 
   bool operator == (const TranData_image_match_args & rhs) const
   {
-    if (!(fun_name == rhs.fun_name))
-      return false;
     if (!(img_data == rhs.img_data))
       return false;
     if (!(pa == rhs.pa))
@@ -631,12 +494,11 @@ class TranData_image_match_args {
 class TranData_image_match_pargs {
  public:
 
-  static const char* ascii_fingerprint; // = "8E2AD6401E83558ECFD6A13D74DD0A3F";
-  static const uint8_t binary_fingerprint[16]; // = {0x8E,0x2A,0xD6,0x40,0x1E,0x83,0x55,0x8E,0xCF,0xD6,0xA1,0x3D,0x74,0xDD,0x0A,0x3F};
+  static const char* ascii_fingerprint; // = "25702B8D5E28AA39160F267DABBC8446";
+  static const uint8_t binary_fingerprint[16]; // = {0x25,0x70,0x2B,0x8D,0x5E,0x28,0xAA,0x39,0x16,0x0F,0x26,0x7D,0xAB,0xBC,0x84,0x46};
 
 
   virtual ~TranData_image_match_pargs() throw();
-  const std::string* fun_name;
   const std::string* img_data;
   const std::vector<std::string> * pa;
 
@@ -736,17 +598,14 @@ class TranDataClient : virtual public TranDataIf {
   void hello_string(std::string& _return, const std::string& para);
   void send_hello_string(const std::string& para);
   void recv_hello_string(std::string& _return);
-  void read_data(std::string& _return, const std::string& name, const int32_t length);
-  void send_read_data(const std::string& name, const int32_t length);
-  void recv_read_data(std::string& _return);
   void opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data);
   void send_opencv_rpc(const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data);
   void recv_opencv_rpc(std::string& _return);
   void read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa);
   void send_read_image(const std::string& file_name, const std::map<std::string, std::string> & pa);
   void recv_read_image(std::string& _return);
-  void image_match(std::vector<std::string> & _return, const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa);
-  void send_image_match(const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa);
+  void image_match(std::vector<std::string> & _return, const std::string& img_data, const std::vector<std::string> & pa);
+  void send_image_match(const std::string& img_data, const std::vector<std::string> & pa);
   void recv_image_match(std::vector<std::string> & _return);
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
@@ -764,7 +623,6 @@ class TranDataProcessor : public ::apache::thrift::TDispatchProcessor {
   typedef std::map<std::string, ProcessFunction> ProcessMap;
   ProcessMap processMap_;
   void process_hello_string(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_read_data(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_opencv_rpc(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_read_image(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_image_match(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
@@ -772,7 +630,6 @@ class TranDataProcessor : public ::apache::thrift::TDispatchProcessor {
   TranDataProcessor(boost::shared_ptr<TranDataIf> iface) :
     iface_(iface) {
     processMap_["hello_string"] = &TranDataProcessor::process_hello_string;
-    processMap_["read_data"] = &TranDataProcessor::process_read_data;
     processMap_["opencv_rpc"] = &TranDataProcessor::process_opencv_rpc;
     processMap_["read_image"] = &TranDataProcessor::process_read_image;
     processMap_["image_match"] = &TranDataProcessor::process_image_match;
@@ -814,16 +671,6 @@ class TranDataMultiface : virtual public TranDataIf {
     return;
   }
 
-  void read_data(std::string& _return, const std::string& name, const int32_t length) {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->read_data(_return, name, length);
-    }
-    ifaces_[i]->read_data(_return, name, length);
-    return;
-  }
-
   void opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -844,13 +691,13 @@ class TranDataMultiface : virtual public TranDataIf {
     return;
   }
 
-  void image_match(std::vector<std::string> & _return, const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa) {
+  void image_match(std::vector<std::string> & _return, const std::string& img_data, const std::vector<std::string> & pa) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->image_match(_return, fun_name, img_data, pa);
+      ifaces_[i]->image_match(_return, img_data, pa);
     }
-    ifaces_[i]->image_match(_return, fun_name, img_data, pa);
+    ifaces_[i]->image_match(_return, img_data, pa);
     return;
   }
 

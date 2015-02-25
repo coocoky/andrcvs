@@ -44,7 +44,7 @@ public class ImageShowFragment extends Fragment {
 
         MainActivity  m_activity = (MainActivity)getActivity();
 
-        Bitmap bmp_show = Bitmap.createBitmap( m_activity.mat_share.cols(),  m_activity.mat_share.rows(), Bitmap.Config.RGB_565);
+        Bitmap bmp_show = Bitmap.createBitmap( m_activity.mat_share.cols(),  m_activity.mat_share.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap( m_activity.mat_share, bmp_show);
         image_view.setImageBitmap(bmp_show);
 

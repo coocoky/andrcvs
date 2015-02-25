@@ -44,18 +44,21 @@ public class GalleryFragment extends Fragment {
         // Inflate the layout for this fragment
         root_view = inflater.inflate(R.layout.fragment_gallery, container, false);
         m_activity = (MainActivity)getActivity();
-        init_view();
-        return  root_view;
-    }
-
-
-    private void init_view() {
 
         image_adapter = new ImageAdapter(m_activity, m_activity.wt, m_activity.ht, 12);
 
         // Get GridView from xml
         //final GridView grid_view = (GridView) findViewById(R.id.gridView);
         grid_view = (GridView) root_view.findViewById(R.id.gridView);
+
+        image_adapter.str_fns = new ArrayList<String>();
+
+        init_view();
+        return  root_view;
+    }
+
+
+    private void init_view() {
 
         try {
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
@@ -66,8 +69,6 @@ public class GalleryFragment extends Fragment {
                 File dir = new File(image_adapter.str_path);
                 File [] fs = dir.listFiles();
                 Arrays.sort(fs, new CompratorByLastModified());
-
-                image_adapter.str_fns = new ArrayList<String>();
 
                 for (int i =  fs.length - 1; i >= 0; i--) {
                     // System.out.println(new Date(fs[i].lastModified()).toLocaleString());
@@ -88,10 +89,6 @@ public class GalleryFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id)
             {
-                //int post01 = grid_view.getFirstVisiblePosition();
-                //ImageView imageView = (ImageView)grid_view.getChildAt(position - post01);
-                //Bitmap bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-                //Utils.bitmapToMat(bitmap, mat_rgb);
 
                 if (position >= image_adapter.str_fns.size()) return;
 

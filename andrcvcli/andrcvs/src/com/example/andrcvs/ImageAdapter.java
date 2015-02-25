@@ -83,7 +83,8 @@ public class ImageAdapter extends BaseAdapter {
             Imgproc.cvtColor(mat_show, mat_show, Imgproc.COLOR_BGR2RGB);
             int  wh_re = (int)((wt*0.9)/3.0 + 0.5);
             Mat   mat_resize = RcvGridAdapter.image_resize(mat_show, wh_re);
-            Bitmap bmp = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.RGB_565);
+            //Bitmap bmp = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.RGB_565);
+            Bitmap bmp = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mat_resize, bmp);
             imageView.setImageBitmap(bmp);
         }

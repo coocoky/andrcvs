@@ -75,11 +75,11 @@
 		<Unit filename="gencpp/cvrpc_constants.h" />
 		<Unit filename="gencpp/cvrpc_types.cpp" />
 		<Unit filename="gencpp/cvrpc_types.h" />
-		<Unit filename="include/MyApp.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="mcvfun.cpp" />
 		<Unit filename="mcvfun.h" />
-		<Unit filename="src/MyApp.cpp" />
+		<Unit filename="myapp.cpp" />
+		<Unit filename="myapp.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

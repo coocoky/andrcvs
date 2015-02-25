@@ -18,6 +18,11 @@
 #include "boost/asio.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/sha1.hpp>
 
 #include "TranData.h"
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -192,10 +197,11 @@ void  getch_console()
 class TranDataHandler : virtual public TranDataIf
 {
 private:
-    Mat                   hists;
-    vector<string>        paths;
+    Mat                   main_hists;
+    vector<string>        m_hashs;
     string                m_imgs_path;
     string                m_str_charset;
+    string                sqlite_fn;
 
     Mat   vocabulary;
     Mat   voc_matchs;
@@ -203,14 +209,19 @@ private:
     Ptr<FeatureDetector>       detector;
     Ptr<DescriptorExtractor>   extractor;
 
+    int                   id_imgs;
+
 public:
     TranDataHandler(string voc_fn, string  imgs_path, string result_path, string str_charset)
     {
         // Your initialization goes here
 
+        id_imgs = 1;
+
         std::string   vocabulary_file =  voc_fn;
         std::string   voc_matchs_fn = result_path + "/voc_matchs.xml.gz";
-        std::string   sqlite_fn = result_path + "/imgs.db";
+
+        sqlite_fn = result_path + "/imgs.db";
 
         m_imgs_path = imgs_path;
         m_str_charset = str_charset;
@@ -245,8 +256,9 @@ public:
         sqlite3_stmt *stmt;
 
         const char *zTail;
+        char    *zErrorMsg;
 
-        int result = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+        int result = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READONLY, NULL);
 
         if (SQLITE_OK != result)
         {
@@ -255,7 +267,9 @@ public:
             exit(-1);
         }
 
-        result = sqlite3_prepare(db,"SELECT * FROM imgs;", -1, &stmt, &zTail);
+        //result = sqlite3_exec( db , "begin transaction" , 0 , 0 , &zErrorMsg );
+
+        result = sqlite3_prepare(db, "SELECT id, imhash, imhist FROM imgs_view;", -1, &stmt, &zTail);
         //result = sqlite3_prepare(db,"SELECT * FROM imgs WHERE id=3;", -1, &stmt, &zTail);
         //result = sqlite3_prepare(db,"SELECT id, value, weight FROM test;", -1, &stmt, &zTail);
 
@@ -264,12 +278,11 @@ public:
         while( result == SQLITE_ROW )
         {
             int id = sqlite3_column_int( stmt, 0 );
-            const char* path = (char*)sqlite3_column_text( stmt, 1 );
+            const char* ch_hash = (char*)sqlite3_column_text( stmt, 1 );
 
             const void   *p_buf = sqlite3_column_blob(stmt, 2);
             int  size_buf = sqlite3_column_bytes(stmt, 2);
 
-            //Mat hist = Mat::zeros(1, VOCA_COLS, CV_32F);
             Mat hist = Mat::zeros(1, SIZE_VOC, CV_32F);
 
             vector<float>   hist_data;
@@ -286,16 +299,18 @@ public:
 
             //std::cout << "id : " << id << "  path : " << path << " hist.rows :" << hist.cols << std::endl;
 
-            paths.push_back(path);
-            hists.push_back(hist);
+            m_hashs.push_back(ch_hash);
+            main_hists.push_back(hist);
 
             result = sqlite3_step(stmt);
         }
 
+        //result = sqlite3_exec ( db , "commit transaction" , 0 , 0 , &zErrorMsg );
+
         sqlite3_finalize(stmt);
         sqlite3_close(db);
 
-        std::cout << "hists rows cols = " << hists.rows << "  " << hists.cols << std::endl;
+        std::cout << "main_hists rows cols = " << main_hists.rows << "  " << main_hists.cols << std::endl;
     }
 
     void hello_string(std::string& _return, const std::string& para)
@@ -311,13 +326,6 @@ public:
         std::cout << _return << std::endl;
     }
 
-    void read_data(std::string& _return, const std::string& name, const int32_t length)
-    {
-        // Your implementation goes here
-
-        printf("read_data\n");
-    }
-
     void opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data)
     {
 
@@ -325,7 +333,7 @@ public:
         printf("opencv_rpc\n");
     }
 
-    void read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa)
+    void read_image(std::string& _return, const std::string &file_name, const std::map<std::string, std::string> &pa)
     {
         // Your implementation goes here
         //printf("read_image\n");
@@ -361,7 +369,7 @@ public:
         event.SetString(chbuf);
 
         MyApp  &app = wxGetApp();
-        wxQueueEvent(&app, event.Clone());
+        //wxQueueEvent(&app, event.Clone());
 
         if (!img_src.data)
         {
@@ -375,7 +383,7 @@ public:
         buf_img.clear();
         params.push_back( cv::IMWRITE_JPEG_QUALITY );
         //params.push_back( 75 );
-        params.push_back( 90 );
+        params.push_back( 92 );
 
         imencode( ".jpg", img_src, buf_img, params );
 
@@ -385,10 +393,14 @@ public:
         _return.assign(p_ch, size_buf);
     }
 
-    void image_match(std::vector<std::string> & _return, const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa)
+    void image_match(std::vector<std::string> &_return, const std::string &img_data, const std::vector<std::string> &pa)
     {
         // Your implementation goes here
         //printf("image_match\n");
+
+        std::cout << "image match ..." << std::endl;
+
+        double time_b = (double)getTickCount();
 
         vector<uchar>   buf_img;
 
@@ -404,23 +416,37 @@ public:
         Mat img_dst, img_gray, detected_edges;
 
         Mat image01 = imdecode(buf_img, CV_LOAD_IMAGE_GRAYSCALE);
-        //Mat image01 = imdecode(buf_img, CV_LOAD_IMAGE_COLOR);
+        //Mat image = imdecode(buf_img, CV_LOAD_IMAGE_COLOR);
 
-        //Mat image_120_01; //= Mat::zeros( 120, 120, CV_8UC1);
+        /*
+        char   ch_fn[1024];
+        snprintf(ch_fn, 1000, "img%d.jpg", id_imgs++ );
+        imwrite(ch_fn, image);
+        */
 
-        //resize(image01, image_120_01, Size(120, 120));
+        Mat  main_hist01;
+        Mat  main_hist02;
 
-        //Mat  hist01 = surf_hist_120(image_120_01, extractor, 0.0, 30);
+        Mat  main_mask01;
+        Mat  main_mask02;
 
-        //Mat  hist01 = Mat::zeros(1, VOCA_COLS, CV_32F);
-        Mat  hist01 = Mat::zeros(1, SIZE_VOC, CV_32F);
+        Mat  hists01;
+        Mat  hists02;
 
-        //bool ret = calc_hist(image01, vocabulary, detector, hist01);
-        bool ret = voc_hist(image01, vocabulary, voc_matchs, hist01);
+        LlcData  *p_llc_data01 = new LlcData;
+        LlcData  *p_llc_data02 = new LlcData;
 
-        if (ret == false) return;
+        memset(p_llc_data01, 0, sizeof(LlcData));
+        memset(p_llc_data02, 0, sizeof(LlcData));
 
-        int     mknn = 9;
+        bool ret01 = voc_bow_mats(image01, vocabulary, voc_matchs, main_hist01, hists01, main_mask01, p_llc_data01);
+
+        //std::cout << "main_hist01 rows cols = " << main_hist01.rows << "  " << main_hist01.cols << std::endl;
+        //std::cout << "main_hists rows cols = " << main_hists.rows << "  " << main_hists.cols << std::endl;
+
+        if (ret01 == false) return;
+
+        int     mknn = 32;
         //float   fbeta = 1e-4;
 
         vector<vector<DMatch> > matches;
@@ -428,53 +454,72 @@ public:
         Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create( "BruteForce" );
         //Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create( "FlannBased" );
 
-        matcher -> knnMatch( hist01, hists, matches, mknn );
+        matcher -> knnMatch( main_hist01, main_hists, matches, mknn );
 
         CodeConverter  cc(m_str_charset.c_str(), "utf-8");
 
+        vector<string>  hashs_knn;
+
         for (int n=0; n<mknn; n++)
         {
-            vector<DMatch> &matchesv = matches[0];
+            vector<DMatch>  &matchesv = matches[0];
 
-            string   str_fn = paths[matchesv[n].trainIdx];
+            int       midx = matchesv[n].trainIdx;
+            string    str_hash = m_hashs[midx];
+            Mat       hist_db = main_hists.row(midx);
 
-            Mat  hist02 = hists.row(matchesv[n].trainIdx);
+            double    distance = compareHist(main_hist01, hist_db, CV_COMP_CORREL);
 
-            double distance = compareHist(hist01, hist02, CV_COMP_CORREL);
-
-            string   str_utf8_fn = "";
-
-            if (m_str_charset == "utf-8")
+            if (distance > 0.25)
             {
-                str_utf8_fn = str_fn;
+                //wxQueueEvent(&app, event.Clone());
+                //_return.push_back(str_utf8_fn);
+                hashs_knn.push_back(str_hash);
             }
-            else
-            {
-                cc.convert_string(str_fn, str_utf8_fn);
-            }
+        }
 
-            //if (distance > 0.80) _return.push_back(str_fn);
+        multimap<double, string, greater<double> >  map_hists;
 
-            //int cols = image01.cols;
-            //int rows = image01.rows;
+        sort_match_imgs(sqlite_fn, vocabulary, voc_matchs, hists01, hashs_knn, map_hists);
 
-            //std::cout << "image match :  " << image01.cols << "  " << image01.rows << "  " << distance << std::endl;
+        double time_e = (double)getTickCount();
+        double time_knn = (time_e - time_b)/getTickFrequency()*1000.0;
+
+        char   chbuf[1024];
+        snprintf(chbuf, 1000, "image match :  %f ms", time_knn);
+        chbuf[1000] = '\0';
+
+        wxThreadEvent event( wxEVT_THREAD, WORKER_EVENT );
+        event.SetString(chbuf);
+
+        MyApp  &app = wxGetApp();
+        wxQueueEvent(&app, event.Clone());
+
+        multimap<double, string, greater<double> >::iterator  iter;
+
+        for (iter = map_hists.begin(); iter != map_hists.end(); iter++)
+        {
+            double  distance_hists = iter->first;
+            string  str_fn = iter->second;
+
+            string  str_utf8_fn;
+
+            cc.convert_string(str_fn, str_utf8_fn);
+
+            if (distance_hists > 0.25) _return.push_back(str_utf8_fn);
 
             char   chbuf[1024];
-
-            snprintf(chbuf, 1000, "image match :  %d  %d  %f", image01.cols, image01.rows, distance);
-
+            snprintf(chbuf, 1000, "%f  %s", distance_hists, str_fn.c_str());
             chbuf[1000] = '\0';
 
-            wxThreadEvent event( wxEVT_THREAD, WORKER_EVENT );
-
             event.SetString(chbuf);
-
-            MyApp  &app = wxGetApp();
             wxQueueEvent(&app, event.Clone());
 
-            _return.push_back(str_utf8_fn);
+            //std::cout << distance_hists << "  " << str_fn << std::endl;
         }
+
+        event.SetString("........................................");
+        wxQueueEvent(&app, event.Clone());
     }
 };
 
@@ -514,10 +559,14 @@ wxThread::ExitCode MyThread::Entry()
 
 void  cvrpc_server(wxString voc_fn01, wxString  imgs_path01, wxString result_path01, wxString charset01)
 {
-    string   voc_fn; voc_fn = voc_fn01.mb_str();
-    string   imgs_path; imgs_path = imgs_path01.mb_str();
-    string   result_path; result_path = result_path01.mb_str();
-    string   str_charset; str_charset = charset01.mb_str();
+    string   voc_fn;
+    voc_fn = voc_fn01.mb_str();
+    string   imgs_path;
+    imgs_path = imgs_path01.mb_str();
+    string   result_path;
+    result_path = result_path01.mb_str();
+    string   str_charset;
+    str_charset = charset01.mb_str();
 
     shared_ptr<TranDataHandler> handler(new TranDataHandler(voc_fn, imgs_path, result_path, str_charset));
     shared_ptr<TProcessor> processor(new TranDataProcessor(handler));
@@ -536,9 +585,12 @@ void  cvrpc_server(wxString voc_fn01, wxString  imgs_path01, wxString result_pat
 
 void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 {
-    string  voc_fn; voc_fn = voc_fn01.mb_str();
-    string  imgs_path; imgs_path = imgs_path01.mb_str();
-    string  result_path; result_path = result_path01.mb_str();
+    string  voc_fn;
+    voc_fn = voc_fn01.mb_str();
+    string  imgs_path;
+    imgs_path = imgs_path01.mb_str();
+    string  result_path;
+    result_path = result_path01.mb_str();
 
     string  sqlite_fn = result_path + "/imgs.db";
     string  voc_matchs_fn = result_path + "/voc_matchs.xml.gz";
@@ -587,40 +639,31 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 
     std::cout << "voc rows cols = " << voc.rows << "  " << voc.cols << std::endl;
 
-    int     knn = KNN;
-    float   fbeta = 1e-4;
+    int     voc_knn = KNN;
+    //float   fbeta = 1e-4;
 
     vector<vector<DMatch> > matches;
 
     Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create( "BruteForce" );
     //Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create( "FlannBased" );
 
-    matcher -> knnMatch( voc, vocabulary, matches, knn );
+    matcher -> knnMatch( voc, vocabulary, matches, voc_knn );
 
-    Mat  voc_matchs = Mat::zeros(voc.rows, knn, CV_32S);
-
-    //Mat  hist = Mat::zeros(1, size_voc, CV_32F);
+    Mat  voc_matchs = Mat::zeros(voc.rows, voc_knn, CV_32S);
 
     for (int n=0; n<voc.rows; n++)
     {
-        vector<DMatch> &matchesv1 = matches[n];
+        vector<DMatch> &matchesv = matches[n];
 
-        for (int i=0; i<knn; i++)
+        for (int i=0; i<voc_knn; i++)
         {
-            int  idx01 = matchesv1[i].trainIdx;
-
-            //hist.at<float>(0, n) += sum_query_descriptor01.at<float>(0, idx01);
-
-            voc_matchs.at<int>(n, i) = matchesv1[i].trainIdx;
-
-            //std::cout << idx01 << ", ";
+            voc_matchs.at<int>(n, i) = matchesv[i].trainIdx;
         }
-
-        //std::cout << std::endl;
     }
 
     FileStorage fs_voc( voc_matchs_fn, FileStorage::WRITE );
     if ( fs.isOpened() ) fs_voc << "voc_matchs" << voc_matchs;
+    fs_voc.release();
 
     std::cout << "voc_matchs rows cols = " << voc_matchs.rows << "  " << voc_matchs.cols << std::endl;
 
@@ -653,7 +696,9 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 
     vector<float>  hist_data;
 
-    Mat  hist = Mat::zeros(1, VOCA_COLS, CV_32F);
+    LlcData *p_llc_data = new LlcData;
+
+    Mat  hist = Mat::zeros(1, SIZE_VOC, CV_32F);
 
     for (int i=0; i<size_images; i++)
     {
@@ -662,60 +707,72 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 
         std::cout << "str_fn : " << str_fn << std::endl;
 
-        Mat image = imread(str_path,  CV_LOAD_IMAGE_GRAYSCALE);
-        //Mat image = imread(str_path,  CV_LOAD_IMAGE_COLOR);
+        struct stat  fi_stat;
 
-        //if (image.data == 0 ) continue;
+        stat(str_path.c_str(), &fi_stat);
+
+        fstream  fs_img(str_path.c_str(), ios_base::binary|ios_base::in);
+
+        vector<uchar>  buff;
+
+        buff.resize(fi_stat.st_size);
+
+        char  *p_buf = (char*)&(buff[0]);
+
+        fs_img.read(p_buf, fi_stat.st_size);
+
+        boost::uuids::detail::sha1   sha;
+        sha.process_bytes(&buff[0], fi_stat.st_size);
+
+        uint32_t digest[5];
+        sha.get_digest(digest);
+
+        char    ch_uuid[100];
+        sprintf(ch_uuid, "%x%x%x%x%x", digest[0], digest[1], digest[2], digest[3], digest[4]);
+        string  str_hash = ch_uuid;
+
+        //memmove(&buff[0], p_buf, fi_stat.st_size);
+
+        //Mat img_src = imdecode(buff, CV_LOAD_IMAGE_COLOR);
+        Mat image = imdecode(buff, CV_LOAD_IMAGE_GRAYSCALE);
+
         if (image.data == 0 || image.cols < MIN_IMG_WH || image.rows < MIN_IMG_WH) continue;
 
-        //fs_list << str_fn << endl;
+        Mat  main_hist;
+        Mat  main_mask;
+        Mat  hists;
 
-        //Mat image_120; //= Mat::zeros( 120, 120, CV_8UC1);
-        //resize(image01, image_120, Size(120, 120));
-        //Mat  hist01 = surf_hist_120(image_120, extractor, 0.0, 30);
+        memset(p_llc_data, 0, sizeof(LlcData));
 
-        //hist = Mat::zeros(1, VOCA_COLS, CV_32F);
-        //bool ret = calc_hist(image, vocabulary, detector, hist);
+        bool ret01 = voc_bow_mats(image, vocabulary, voc_matchs, main_hist, hists, main_mask, p_llc_data);
 
-        hist = Mat::zeros(1, SIZE_VOC, CV_32F);
-        bool ret = voc_hist(image, vocabulary, voc_matchs, hist);
-
-        if (ret == false) continue;
-
-        //descriptors.push_back(hist);
-
-        sqlite3_prepare_v2(db,"insert into imgs(id, path, hist) values(null,?,?)", -1, &stmt, 0);
-
-        sqlite3_bind_text(stmt, 1, str_fn.c_str(), str_fn.length() , NULL);
-
-        hist_data.clear();
-        hist_data.resize(hist.cols);
-
-        for (int i=0; i<hist.cols; i++)
-        {
-            hist_data[i] = hist.at<float>(0, i);
-        }
-
-        char   *p_buf = (char*)(&hist_data[0]);
-
-        sqlite3_bind_blob(stmt, 2, p_buf, hist.cols*sizeof(float), NULL);
-
-        sqlite3_step(stmt);
-
-        //if (ret != SQLITE_OK) fprintf(stderr,"db: %s\n",sqlite3_errmsg(db));
-
-        sqlite3_reset(stmt);
+        img_to_db(db, str_hash, str_fn, main_hist,  main_mask, p_llc_data);
     }
 
     //FileStorage fs_hists( hists_fn, FileStorage::WRITE );
     //if ( fs_hists.isOpened() )  fs_hists << "surf_hists" << descriptors;
 
-    sqlite3_finalize(stmt);
+    delete  p_llc_data;
 
     sqlite3_free(errmsg);
     sqlite3_close(db);
 
     printf("Close database\n");
+}
+
+
+void  draw_hist(char *win_name, Mat hist)
+{
+    int DRAW_H=600;
+    Mat img_show = Mat::zeros(DRAW_H,  hist.cols, CV_8UC3);
+
+    for (int i=0; i<hist.cols; i++)
+    {
+        line(img_show, Point(i, DRAW_H-200), Point(i, DRAW_H-(20.0*hist.at<float>(0,i)+0.5+200)), Scalar(255,255,255),1);
+    }
+
+    namedWindow(win_name, 1);
+    imshow(win_name, img_show);
 }
 
 int main(int argc, char **argv)
@@ -732,7 +789,6 @@ int main(int argc, char **argv)
         return -1;
     }
 
-
 #ifdef _WIN32
     WORD wVersionRequested;
     WSADATA wsaData;
@@ -746,7 +802,11 @@ int main(int argc, char **argv)
     }
 #endif
 
-    if (argc == 1) { help(argv[0]); return -1; }
+    if (argc == 1)
+    {
+        help(argv[0]);
+        return -1;
+    }
 
     wxString  wstr_cml01 = wxEmptyString;
     wxString  wstr_cml02 = wxEmptyString;
@@ -758,7 +818,7 @@ int main(int argc, char **argv)
     if ( parser.Parse() == 0)
     {
         if (parser.Found("setup") && parser.Found("vocabulary", &wstr_cml01)
-              &&  parser.Found("images", &wstr_cml02) &&  parser.Found("result", &wstr_cml03))
+                &&  parser.Found("images", &wstr_cml02) &&  parser.Found("result", &wstr_cml03))
         {
             //std::cout << str_cml01 << std::endl;
             //std::cout << str_cml02 << std::endl;
@@ -768,7 +828,7 @@ int main(int argc, char **argv)
         }
 
         if (parser.Found("run") && parser.Found("vocabulary", &wstr_cml01)
-              &&  parser.Found("images", &wstr_cml02) &&  parser.Found("result", &wstr_cml03))
+                &&  parser.Found("images", &wstr_cml02) &&  parser.Found("result", &wstr_cml03))
         {
             if ( parser.Found("charset", &wstr_cml04) == false )
             {

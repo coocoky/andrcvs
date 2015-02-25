@@ -195,208 +195,6 @@ uint32_t TranData_hello_string_presult::read(::apache::thrift::protocol::TProtoc
 }
 
 
-TranData_read_data_args::~TranData_read_data_args() throw() {
-}
-
-
-uint32_t TranData_read_data_args::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
-    {
-      case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->name);
-          this->__isset.name = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 2:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->length);
-          this->__isset.length = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
-    }
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t TranData_read_data_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  oprot->incrementRecursionDepth();
-  xfer += oprot->writeStructBegin("TranData_read_data_args");
-
-  xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString(this->name);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("length", ::apache::thrift::protocol::T_I32, 2);
-  xfer += oprot->writeI32(this->length);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  oprot->decrementRecursionDepth();
-  return xfer;
-}
-
-
-TranData_read_data_pargs::~TranData_read_data_pargs() throw() {
-}
-
-
-uint32_t TranData_read_data_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  oprot->incrementRecursionDepth();
-  xfer += oprot->writeStructBegin("TranData_read_data_pargs");
-
-  xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString((*(this->name)));
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("length", ::apache::thrift::protocol::T_I32, 2);
-  xfer += oprot->writeI32((*(this->length)));
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  oprot->decrementRecursionDepth();
-  return xfer;
-}
-
-
-TranData_read_data_result::~TranData_read_data_result() throw() {
-}
-
-
-uint32_t TranData_read_data_result::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
-    {
-      case 0:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readBinary(this->success);
-          this->__isset.success = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
-    }
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t TranData_read_data_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
-
-  uint32_t xfer = 0;
-
-  xfer += oprot->writeStructBegin("TranData_read_data_result");
-
-  if (this->__isset.success) {
-    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRING, 0);
-    xfer += oprot->writeBinary(this->success);
-    xfer += oprot->writeFieldEnd();
-  }
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-TranData_read_data_presult::~TranData_read_data_presult() throw() {
-}
-
-
-uint32_t TranData_read_data_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
-    {
-      case 0:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readBinary((*(this->success)));
-          this->__isset.success = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
-    }
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-
 TranData_opencv_rpc_args::~TranData_opencv_rpc_args() throw() {
 }
 
@@ -904,21 +702,13 @@ uint32_t TranData_image_match_args::read(::apache::thrift::protocol::TProtocol* 
     {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->fun_name);
-          this->__isset.fun_name = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 2:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
           xfer += iprot->readBinary(this->img_data);
           this->__isset.img_data = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 3:
+      case 2:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->pa.clear();
@@ -955,15 +745,11 @@ uint32_t TranData_image_match_args::write(::apache::thrift::protocol::TProtocol*
   oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("TranData_image_match_args");
 
-  xfer += oprot->writeFieldBegin("fun_name", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString(this->fun_name);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("img_data", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeFieldBegin("img_data", ::apache::thrift::protocol::T_STRING, 1);
   xfer += oprot->writeBinary(this->img_data);
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("pa", ::apache::thrift::protocol::T_LIST, 3);
+  xfer += oprot->writeFieldBegin("pa", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->pa.size()));
     std::vector<std::string> ::const_iterator _iter21;
@@ -991,15 +777,11 @@ uint32_t TranData_image_match_pargs::write(::apache::thrift::protocol::TProtocol
   oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("TranData_image_match_pargs");
 
-  xfer += oprot->writeFieldBegin("fun_name", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString((*(this->fun_name)));
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("img_data", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeFieldBegin("img_data", ::apache::thrift::protocol::T_STRING, 1);
   xfer += oprot->writeBinary((*(this->img_data)));
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("pa", ::apache::thrift::protocol::T_LIST, 3);
+  xfer += oprot->writeFieldBegin("pa", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>((*(this->pa)).size()));
     std::vector<std::string> ::const_iterator _iter22;
@@ -1213,65 +995,6 @@ void TranDataClient::recv_hello_string(std::string& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "hello_string failed: unknown result");
 }
 
-void TranDataClient::read_data(std::string& _return, const std::string& name, const int32_t length)
-{
-  send_read_data(name, length);
-  recv_read_data(_return);
-}
-
-void TranDataClient::send_read_data(const std::string& name, const int32_t length)
-{
-  int32_t cseqid = 0;
-  oprot_->writeMessageBegin("read_data", ::apache::thrift::protocol::T_CALL, cseqid);
-
-  TranData_read_data_pargs args;
-  args.name = &name;
-  args.length = &length;
-  args.write(oprot_);
-
-  oprot_->writeMessageEnd();
-  oprot_->getTransport()->writeEnd();
-  oprot_->getTransport()->flush();
-}
-
-void TranDataClient::recv_read_data(std::string& _return)
-{
-
-  int32_t rseqid = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TMessageType mtype;
-
-  iprot_->readMessageBegin(fname, mtype, rseqid);
-  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
-    ::apache::thrift::TApplicationException x;
-    x.read(iprot_);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-    throw x;
-  }
-  if (mtype != ::apache::thrift::protocol::T_REPLY) {
-    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-  }
-  if (fname.compare("read_data") != 0) {
-    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-  }
-  TranData_read_data_presult result;
-  result.success = &_return;
-  result.read(iprot_);
-  iprot_->readMessageEnd();
-  iprot_->getTransport()->readEnd();
-
-  if (result.__isset.success) {
-    // _return pointer has now been filled
-    return;
-  }
-  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "read_data failed: unknown result");
-}
-
 void TranDataClient::opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data)
 {
   send_opencv_rpc(fun_name, pa, in_data);
@@ -1391,19 +1114,18 @@ void TranDataClient::recv_read_image(std::string& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "read_image failed: unknown result");
 }
 
-void TranDataClient::image_match(std::vector<std::string> & _return, const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa)
+void TranDataClient::image_match(std::vector<std::string> & _return, const std::string& img_data, const std::vector<std::string> & pa)
 {
-  send_image_match(fun_name, img_data, pa);
+  send_image_match(img_data, pa);
   recv_image_match(_return);
 }
 
-void TranDataClient::send_image_match(const std::string& fun_name, const std::string& img_data, const std::vector<std::string> & pa)
+void TranDataClient::send_image_match(const std::string& img_data, const std::vector<std::string> & pa)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("image_match", ::apache::thrift::protocol::T_CALL, cseqid);
 
   TranData_image_match_pargs args;
-  args.fun_name = &fun_name;
   args.img_data = &img_data;
   args.pa = &pa;
   args.write(oprot_);
@@ -1521,60 +1243,6 @@ void TranDataProcessor::process_hello_string(int32_t seqid, ::apache::thrift::pr
 
   if (this->eventHandler_.get() != NULL) {
     this->eventHandler_->postWrite(ctx, "TranData.hello_string", bytes);
-  }
-}
-
-void TranDataProcessor::process_read_data(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
-{
-  void* ctx = NULL;
-  if (this->eventHandler_.get() != NULL) {
-    ctx = this->eventHandler_->getContext("TranData.read_data", callContext);
-  }
-  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "TranData.read_data");
-
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->preRead(ctx, "TranData.read_data");
-  }
-
-  TranData_read_data_args args;
-  args.read(iprot);
-  iprot->readMessageEnd();
-  uint32_t bytes = iprot->getTransport()->readEnd();
-
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->postRead(ctx, "TranData.read_data", bytes);
-  }
-
-  TranData_read_data_result result;
-  try {
-    iface_->read_data(result.success, args.name, args.length);
-    result.__isset.success = true;
-  } catch (const std::exception& e) {
-    if (this->eventHandler_.get() != NULL) {
-      this->eventHandler_->handlerError(ctx, "TranData.read_data");
-    }
-
-    ::apache::thrift::TApplicationException x(e.what());
-    oprot->writeMessageBegin("read_data", ::apache::thrift::protocol::T_EXCEPTION, seqid);
-    x.write(oprot);
-    oprot->writeMessageEnd();
-    oprot->getTransport()->writeEnd();
-    oprot->getTransport()->flush();
-    return;
-  }
-
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->preWrite(ctx, "TranData.read_data");
-  }
-
-  oprot->writeMessageBegin("read_data", ::apache::thrift::protocol::T_REPLY, seqid);
-  result.write(oprot);
-  oprot->writeMessageEnd();
-  bytes = oprot->getTransport()->writeEnd();
-  oprot->getTransport()->flush();
-
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->postWrite(ctx, "TranData.read_data", bytes);
   }
 }
 
@@ -1709,7 +1377,7 @@ void TranDataProcessor::process_image_match(int32_t seqid, ::apache::thrift::pro
 
   TranData_image_match_result result;
   try {
-    iface_->image_match(result.success, args.fun_name, args.img_data, args.pa);
+    iface_->image_match(result.success, args.img_data, args.pa);
     result.__isset.success = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {

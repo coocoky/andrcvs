@@ -1,11 +1,11 @@
 # depslib dependency file v1.0
-1416914166 source:d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_constants.cpp
+1424840390 source:d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_constants.cpp
 	"cvrpc_constants.h"
 
-1416914166 d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_constants.h
+1424840390 d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_constants.h
 	"cvrpc_types.h"
 
-1416914166 d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_types.h
+1424840390 d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_types.h
 	<iosfwd>
 	<thrift/Thrift.h>
 	<thrift/TApplicationException.h>
@@ -2388,7 +2388,7 @@
 	<functional>
 	<tr1/functional>
 
-1416914166 source:d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_types.cpp
+1424840390 source:d:\githubprjs\andrcvs\andrcvser\gencpp\cvrpc_types.cpp
 	"cvrpc_types.h"
 	<algorithm>
 	<ostream>
@@ -4456,10 +4456,10 @@
 	<boost/limits.hpp>
 	<boost/cstdint.hpp>
 
-1416914166 source:d:\githubprjs\andrcvs\andrcvser\gencpp\trandata.cpp
+1424840390 source:d:\githubprjs\andrcvs\andrcvser\gencpp\trandata.cpp
 	"TranData.h"
 
-1416914166 d:\githubprjs\andrcvs\andrcvser\gencpp\trandata.h
+1424840390 d:\githubprjs\andrcvs\andrcvser\gencpp\trandata.h
 	<thrift/TDispatchProcessor.h>
 	"cvrpc_types.h"
 
@@ -4471,7 +4471,7 @@
 	<thrift/protocol/TProtocol.h>
 	<boost/shared_ptr.hpp>
 
-1420547306 source:d:\githubprjs\andrcvs\andrcvser\main.cpp
+1424841892 source:d:\githubprjs\andrcvs\andrcvser\main.cpp
 	"wx/wxprec.h"
 	<winsock2.h>
 	<ws2tcpip.h>
@@ -4486,6 +4486,11 @@
 	"boost/asio.hpp"
 	<boost/property_tree/ptree.hpp>
 	<boost/property_tree/json_parser.hpp>
+	<boost/uuid/uuid.hpp>
+	<boost/uuid/uuid_generators.hpp>
+	<boost/uuid/uuid_io.hpp>
+	<boost/lexical_cast.hpp>
+	<boost/uuid/sha1.hpp>
 	"TranData.h"
 	<thrift/protocol/TBinaryProtocol.h>
 	<thrift/server/TSimpleServer.h>
@@ -14539,7 +14544,7 @@
 	<boost/shared_ptr.hpp>
 	<thrift/transport/TBufferTransports.h>
 
-1420547240 d:\githubprjs\andrcvs\andrcvser\mcvfun.h
+1424680330 d:\githubprjs\andrcvs\andrcvser\mcvfun.h
 	<opencv2/opencv.hpp>
 	<opencv2/nonfree/nonfree.hpp>
 	<string>
@@ -14756,10 +14761,236 @@
 	"wx/string.h"
 	"wx/filefn.h"
 
-1419754559 source:d:\githubprjs\andrcvs\andrcvser\mcvfun.cpp
+1424680587 source:d:\githubprjs\andrcvs\andrcvser\mcvfun.cpp
 	"mcvfun.h"
 	<stdio.h>
 
 1419247316 source:d:\githubprjs\andrcvs\andrcvser\src\myapp.cpp
+	"MyApp.h"
+
+1278927436 d:\mrcvlibs\boost_155\include\boost\uuid\uuid.hpp
+	<boost/config.hpp>
+	<stddef.h>
+	<boost/cstdint.hpp>
+	<algorithm>
+	<boost/config.hpp>
+	<boost/type_traits/is_pod.hpp>
+	<boost/type_traits/integral_constant.hpp>
+
+1269864944 d:\mrcvlibs\boost_155\include\boost\uuid\uuid_generators.hpp
+	<boost/uuid/nil_generator.hpp>
+	<boost/uuid/string_generator.hpp>
+	<boost/uuid/name_generator.hpp>
+	<boost/uuid/random_generator.hpp>
+
+1269864944 d:\mrcvlibs\boost_155\include\boost\uuid\nil_generator.hpp
+	<boost/uuid/uuid.hpp>
+
+1306915940 d:\mrcvlibs\boost_155\include\boost\uuid\string_generator.hpp
+	<boost/uuid/uuid.hpp>
+	<string>
+	<cstring>
+	<iterator>
+	<algorithm>
+	<stdexcept>
+	<boost/throw_exception.hpp>
+
+1306661700 d:\mrcvlibs\boost_155\include\boost\uuid\name_generator.hpp
+	<boost/uuid/uuid.hpp>
+	<boost/uuid/sha1.hpp>
+	<boost/assert.hpp>
+	<string>
+	<cstring>
+
+1349915420 d:\mrcvlibs\boost_155\include\boost\uuid\sha1.hpp
+	<boost/static_assert.hpp>
+	<stdexcept>
+	<boost/throw_exception.hpp>
+	<cstddef>
+	<string>
+
+1306661944 d:\mrcvlibs\boost_155\include\boost\uuid\random_generator.hpp
+	<boost/uuid/uuid.hpp>
+	<boost/uuid/seed_rng.hpp>
+	<boost/random/uniform_int.hpp>
+	<boost/random/variate_generator.hpp>
+	<boost/random/mersenne_twister.hpp>
+	<boost/assert.hpp>
+	<boost/shared_ptr.hpp>
+	<limits>
+
+1349316328 d:\mrcvlibs\boost_155\include\boost\uuid\seed_rng.hpp
+	<boost/config.hpp>
+	<cstring>
+	<limits>
+	<ctime>
+	<cstdlib>
+	<cstdio>
+	<boost/uuid/sha1.hpp>
+	<boost/iterator/iterator_facade.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\uniform_int.hpp
+	<boost/assert.hpp>
+	<boost/random/uniform_int_distribution.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\uniform_int_distribution.hpp
+	<iosfwd>
+	<ios>
+	<istream>
+	<boost/config.hpp>
+	<boost/limits.hpp>
+	<boost/assert.hpp>
+	<boost/random/detail/config.hpp>
+	<boost/random/detail/operators.hpp>
+	<boost/random/detail/uniform_int_float.hpp>
+	<boost/random/detail/signed_unsigned_tools.hpp>
+	<boost/type_traits/make_unsigned.hpp>
+	<boost/type_traits/is_integral.hpp>
+
+1240098956 d:\mrcvlibs\boost_155\include\boost\random\detail\config.hpp
+	<boost/config.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\detail\operators.hpp
+	<boost/random/detail/config.hpp>
+	<boost/detail/workaround.hpp>
+
+1309960656 d:\mrcvlibs\boost_155\include\boost\random\detail\uniform_int_float.hpp
+	<boost/limits.hpp>
+	<boost/config.hpp>
+	<boost/integer.hpp>
+	<boost/random/detail/config.hpp>
+	<boost/random/detail/generator_bits.hpp>
+	<boost/random/detail/disable_warnings.hpp>
+	<boost/random/detail/enable_warnings.hpp>
+
+1309960656 d:\mrcvlibs\boost_155\include\boost\random\detail\generator_bits.hpp
+	<boost/limits.hpp>
+
+1269164706 d:\mrcvlibs\boost_155\include\boost\random\detail\disable_warnings.hpp
+	<boost/config.hpp>
+
+1262409796 d:\mrcvlibs\boost_155\include\boost\random\detail\enable_warnings.hpp
+
+1336198476 d:\mrcvlibs\boost_155\include\boost\random\detail\signed_unsigned_tools.hpp
+	<boost/limits.hpp>
+	<boost/config.hpp>
+	<boost/type_traits/make_unsigned.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\variate_generator.hpp
+	<boost/random/detail/ptr_helper.hpp>
+	<boost/random/detail/disable_warnings.hpp>
+	<boost/random/detail/enable_warnings.hpp>
+
+1090845814 d:\mrcvlibs\boost_155\include\boost\random\detail\ptr_helper.hpp
+	<boost/config.hpp>
+
+1318148010 d:\mrcvlibs\boost_155\include\boost\random\mersenne_twister.hpp
+	<iosfwd>
+	<istream>
+	<stdexcept>
+	<boost/config.hpp>
+	<boost/cstdint.hpp>
+	<boost/integer/integer_mask.hpp>
+	<boost/random/detail/config.hpp>
+	<boost/random/detail/ptr_helper.hpp>
+	<boost/random/detail/seed.hpp>
+	<boost/random/detail/seed_impl.hpp>
+	<boost/random/detail/generator_seed_seq.hpp>
+
+1285967644 d:\mrcvlibs\boost_155\include\boost\integer\integer_mask.hpp
+	<boost/integer_fwd.hpp>
+	<boost/config.hpp>
+	<boost/integer.hpp>
+	<climits>
+	<cstddef>
+	<boost/limits.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\detail\seed.hpp
+	<boost/config.hpp>
+	<boost/utility/enable_if.hpp>
+	<boost/type_traits/is_arithmetic.hpp>
+	<boost/type_traits/is_arithmetic.hpp>
+	<boost/mpl/bool.hpp>
+
+1309960656 d:\mrcvlibs\boost_155\include\boost\random\detail\seed_impl.hpp
+	<stdexcept>
+	<boost/cstdint.hpp>
+	<boost/config/no_tr1/cmath.hpp>
+	<boost/integer/integer_mask.hpp>
+	<boost/integer/static_log2.hpp>
+	<boost/type_traits/is_signed.hpp>
+	<boost/type_traits/is_integral.hpp>
+	<boost/type_traits/make_unsigned.hpp>
+	<boost/mpl/bool.hpp>
+	<boost/mpl/if.hpp>
+	<boost/mpl/int.hpp>
+	<boost/random/detail/const_mod.hpp>
+	<boost/random/detail/integer_log2.hpp>
+	<boost/random/detail/signed_unsigned_tools.hpp>
+	<boost/random/detail/generator_bits.hpp>
+	<boost/random/detail/disable_warnings.hpp>
+	<boost/random/detail/enable_warnings.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\detail\const_mod.hpp
+	<boost/assert.hpp>
+	<boost/static_assert.hpp>
+	<boost/integer_traits.hpp>
+	<boost/type_traits/make_unsigned.hpp>
+	<boost/random/detail/large_arithmetic.hpp>
+	<boost/random/detail/disable_warnings.hpp>
+	<boost/random/detail/enable_warnings.hpp>
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\detail\large_arithmetic.hpp
+	<boost/cstdint.hpp>
+	<boost/integer.hpp>
+	<boost/limits.hpp>
+	<boost/random/detail/integer_log2.hpp>
+	<boost/random/detail/disable_warnings.hpp>
+	<boost/random/detail/enable_warnings.hpp>
+
+1379740620 d:\mrcvlibs\boost_155\include\boost\random\detail\integer_log2.hpp
+	<boost/config.hpp>
+	<boost/limits.hpp>
+	<boost/pending/integer_log2.hpp>
+
+1219547784 d:\mrcvlibs\boost_155\include\boost\pending\integer_log2.hpp
+	<assert.h>
+	<climits>
+	"boost/limits.hpp"
+	"boost/config.hpp"
+
+1301984872 d:\mrcvlibs\boost_155\include\boost\random\detail\generator_seed_seq.hpp
+
+1278927436 d:\mrcvlibs\boost_155\include\boost\uuid\uuid_io.hpp
+	<boost/uuid/uuid.hpp>
+	<ios>
+	<ostream>
+	<istream>
+	<boost/io/ios_state.hpp>
+	<locale>
+	<algorithm>
+
+1420730525 d:\githubprjs\andrcvs\andrcvser\myapp.h
+	"wx/wxprec.h"
+	<winsock2.h>
+	<ws2tcpip.h>
+	"wx/wx.h"
+	"wx/thread.h"
+	<wx/log.h>
+	<wx/tokenzr.h>
+	<wx/arrstr.h>
+	"wx/filefn.h"
+	"wx/dir.h"
+	<wx/init.h>
+	<wx/string.h>
+	"wx/cmdline.h"
+	<wx/app.h>
+	<wx/cmdline.h>
+	<opencv2/opencv.hpp>
+	<opencv2/nonfree/nonfree.hpp>
+	"boost/thread.hpp"
+	"boost/asio.hpp"
+
+1420730525 source:d:\githubprjs\andrcvs\andrcvser\myapp.cpp
 	"MyApp.h"
 

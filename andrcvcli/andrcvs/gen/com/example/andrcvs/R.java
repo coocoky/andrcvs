@@ -35,18 +35,12 @@ public final class R {
         public static final int image_0010=0x7f02000a;
         public static final int image_0011=0x7f02000b;
         public static final int image_0012=0x7f02000c;
-        public static final int image_0013=0x7f02000d;
-        public static final int image_0014=0x7f02000e;
-        public static final int image_0015=0x7f02000f;
-        public static final int image_0016=0x7f020010;
-        public static final int test01=0x7f020011;
+        public static final int test01=0x7f02000d;
     }
     public static final class id {
-        public static final int action_settings=0x7f080006;
+        public static final int action_settings=0x7f080004;
         public static final int container=0x7f080000;
-        public static final int frame_rcv=0x7f080004;
         public static final int gridView=0x7f080001;
-        public static final int imageView=0x7f080005;
         public static final int imageView2=0x7f080003;
         public static final int textView1=0x7f080002;
     }

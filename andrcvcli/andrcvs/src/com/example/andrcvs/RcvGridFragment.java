@@ -1,19 +1,15 @@
 package com.example.andrcvs;
 
-import android.app.Activity;
 import android.app.FragmentTransaction;
-import android.content.ContentResolver;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -35,7 +31,6 @@ import org.opencv.core.MatOfInt;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,20 +39,11 @@ import java.util.Map;
 
 import cvrpc.TranData;
 
-import static com.example.andrcvs.RcvGridAdapter.image_resize;
-
 
 /**
  * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link RcvGridFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link RcvGridFragment#newInstance} factory method to
- * create an instance of this fragment.
  */
 public class RcvGridFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 
     private Mat  mat_show;
     private Mat  mat_resize;
@@ -66,6 +52,7 @@ public class RcvGridFragment extends Fragment {
     private String str_ip;
     private int port;
     private List<String> img_fns;
+    private ByteBuffer   img_buf_sort_src;
 
     static  final int HANDLER_RPC = 2000;
     static  final int HANDLER_RPC_ERR = 2002;
@@ -73,82 +60,71 @@ public class RcvGridFragment extends Fragment {
     private RcvSerAdd     rcv_ser_add;
     private MainActivity  m_activity;
     private View          view_frame;
+    private GridView      grid_view;
 
     public RcvGridFragment() {
         // Required empty public constructor
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
+        // Inflate the layout for this fragment
         view_frame = inflater.inflate(R.layout.fragment_rcv_grid, container, false);
-
         m_activity = (MainActivity)getActivity();
-
-        ImageView image_view = (ImageView) view_frame.findViewById(R.id.imageView);
-
         mat_show = m_activity.mat_share;
-
         int  w_re = (int)(m_activity.wt*0.7 + 0.5);
-        mat_resize = RcvGridAdapter.image_resize(mat_show, w_re);
-        //mat_rpc = RcvGridAdapter.image_resize(mat_show, 400);
-        mat_rpc = mat_show;
-
-        Bitmap bitmap = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(mat_resize, bitmap);
-        image_view.setImageBitmap(bitmap);
+        //mat_resize = RcvGridAdapter.image_resize(mat_show, w_re);
+        mat_rpc =  m_activity.mat_share;
+        //if ( mat_rpc.cols() > 480 ||  mat_rpc.rows() > 480 ) mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 480);
+        mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 240);
 
         // Get GridView from xml
-        GridView grid_view = (GridView) view_frame.findViewById(R.id.gridView);
-        rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht, 9);
+        grid_view = (GridView) view_frame.findViewById(R.id.gridView);
+        rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht);
         // Set Adapter for GridView
         grid_view.setAdapter(rcv_adapter);
+        rcv_adapter.set_n_mats(12);
+
+        Bitmap  bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test01);
+        Mat     mat_null_img = new Mat();
+        Utils.bitmapToMat(bmp, mat_null_img);
+
+        /*
+        rcv_adapter.mat_show_rpcs.set(0, mat_rpc);
+        rcv_adapter.mat_show_rpcs.set(1, mat_null_img);
+        rcv_adapter.mat_show_rpcs.set(2, mat_null_img);
+        */
+
+        rcv_adapter.mat_show_rpcs.clear();
+        //rcv_adapter.mat_show_rpcs = new ArrayList<Mat>();
+        rcv_adapter.mat_show_rpcs.add(mat_rpc);
+        rcv_adapter.mat_show_rpcs.add(mat_null_img);
+        rcv_adapter.mat_show_rpcs.add(mat_null_img);
 
         grid_view.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id)
             {
-                //int post01 = grid_view.getFirstVisiblePosition();
-                //ImageView imageView = (ImageView)grid_view.getChildAt(position - post01);
-                //Bitmap bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-                //Utils.bitmapToMat(bitmap, mat_rgb);
-
-                //String    str_txt = "ItemClick";
-                //Toast.makeText(m_activity, str_txt, Toast.LENGTH_LONG).show();
-
                 m_activity.mat_share = rcv_adapter.mat_show_rpcs.get(position);
+                if ( m_activity.mat_share.cols() == 0 ||  m_activity.mat_share.rows() == 0) return;
 
                 Fragment fragment = new ImageShowFragment();
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 transaction.replace(R.id.container, fragment);
                 transaction.addToBackStack(null);
                 transaction.commit();
-
             }
         });
 
+        setHasOptionsMenu(true);
         img_match();
 
         // Inflate the layout for this fragment
 
         return  view_frame;
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
     }
 
     Handler handler_rpc = new Handler() {
@@ -174,10 +150,14 @@ public class RcvGridFragment extends Fragment {
     }
 
     public void img_match() {
+
+        //grid_view.setSelection(0);
+        grid_view.smoothScrollToPosition(0);
+
         new Thread(new Runnable() {
             public void run() {
                 String  str_debug = null;
-                int clientTimeout = 30000;
+                //int clientTimeout = 30*1000;
                 TTransport transport;
                 try {
                     //MyApp my_app = (MyApp) getApplication();
@@ -190,53 +170,66 @@ public class RcvGridFragment extends Fragment {
                     str_ip = rcv_ser_add.ip_v4;
                     port = Integer.parseInt(rcv_ser_add.port);
 
-                    //TTransport transport;
-                    //transport = new TSocket(str_ip, port);
-
                     transport = new TFramedTransport(new TSocket(str_ip, port));
 
                     TProtocol protocol = new TBinaryProtocol(transport);
                     TranData.Client client = new TranData.Client(protocol);
                     transport.open();
 
-                    MatOfInt params90 = new MatOfInt(Highgui.IMWRITE_JPEG_QUALITY, 90);
+                    MatOfInt params90 = new MatOfInt(Highgui.IMWRITE_JPEG_QUALITY, 97);
                     MatOfByte buff90 = new MatOfByte();
 
-                    Highgui.imencode(".jpg", mat_rpc, buff90, params90);
+                    Mat    mat_rgb = new Mat();
+                    Imgproc.cvtColor(mat_rpc, mat_rgb, Imgproc.COLOR_BGR2RGB);
+                    Highgui.imencode(".jpg", mat_rgb, buff90, params90);
 
-                    byte[] img_bytesa = buff90.toArray();
-                    ByteBuffer img_buf01 = ByteBuffer.wrap(img_bytesa);
+                    byte[] img_bytes = buff90.toArray();
+                    ByteBuffer img_buf = ByteBuffer.wrap(img_bytes);
 
-                    String fun_name = "match";
+                    //String fun_name = "match";
                     Map<String, String> pa = new HashMap<String, String>();
                     List<String> pa_match = new ArrayList<String>();
-                    img_fns = client.image_match(fun_name, img_buf01, pa_match);
+                    img_fns = client.image_match(img_buf, pa_match);
 
                     Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test01);
                     Mat  mat_null_img = new Mat();
                     Utils.bitmapToMat(bmp, mat_null_img);
 
+                    rcv_adapter.set_n_mats(img_fns.size()+3);
+
                     for (int i=0; i<img_fns.size(); i++){
                         String img_fn = img_fns.get(i);
-                        ByteBuffer img_buf = client.read_image(img_fn, pa);
+                        img_buf = client.read_image(img_fn, pa);
 
-                        byte[] img_bytes = new byte[img_buf.remaining()];
-                        img_buf.get(img_bytes, 0, img_bytes.length);
-                        //int size_buf = img_buf.limit();
-                        //byte[] img_bytes = img_buf.array();
+                        byte[] img_bytes_re = new byte[img_buf.remaining()];
+                        img_buf.get(img_bytes_re, 0, img_bytes_re.length);
+
                         MatOfByte mat_bytes = new MatOfByte();
-                        mat_bytes.fromArray(img_bytes);
+                        mat_bytes.fromArray(img_bytes_re);
 
+                        Mat   mat_rcv = new Mat();
                         if (img_bytes.length != 0) {
-                            Mat mat_show = Highgui.imdecode(mat_bytes, Highgui.CV_LOAD_IMAGE_COLOR);
-                            Imgproc.cvtColor(mat_show, mat_show, Imgproc.COLOR_BGR2RGB);
-                            rcv_adapter.mat_show_rpcs.set(i, mat_show);
+                            mat_rcv = Highgui.imdecode(mat_bytes, Highgui.CV_LOAD_IMAGE_COLOR);
+                            Imgproc.cvtColor(mat_rcv, mat_rcv, Imgproc.COLOR_BGR2RGB);
                         } else {
                             str_debug = "rcv exception !";
-
-                            rcv_adapter.mat_show_rpcs.set(i, mat_null_img);
+                            mat_rcv = mat_null_img;
                         }
 
+                        synchronized(rcv_adapter.mat_show_rpcs) {
+                            //rcv_adapter.mat_show_rpcs.set(i+3, mat_rcv);
+                            rcv_adapter.mat_show_rpcs.add(mat_rcv);
+                        }
+
+                        Message msg = new Message();
+                        msg.what = HANDLER_RPC;
+                        handler_rpc.sendMessage(msg);
+
+                        try {
+                            Thread.sleep(20);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
 
                     transport.close();
@@ -253,10 +246,6 @@ public class RcvGridFragment extends Fragment {
                     }
                 }
 
-                Message msg = new Message();
-                msg.what = HANDLER_RPC;
-                handler_rpc.sendMessage(msg);
-
                 if (str_debug != null)  {
                     Message msg_err = new Message();
                     msg_err.what = HANDLER_RPC_ERR;
@@ -268,4 +257,15 @@ public class RcvGridFragment extends Fragment {
             }
         }).start();
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        return super.onOptionsItemSelected(item);
+    }
+
 }

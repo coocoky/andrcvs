@@ -1,15 +1,15 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="hp400.andrcvs.GalleryFragment">
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="fill_parent"
+    android:layout_height="fill_parent" tools:context="hp400.andrcvs.GalleryFragment"
+    android:clickable="true"
+    android:background="#fff7f7f7">
 
     <!-- TODO: Update blank fragment layout -->
 
     <GridView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:id="@+id/gridView"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentTop="false"
-        android:numColumns="3" />
+        android:numColumns="3"
+        android:layout_gravity="top|center" />
 </FrameLayout>

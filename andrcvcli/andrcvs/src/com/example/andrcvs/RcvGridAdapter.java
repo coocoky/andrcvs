@@ -29,25 +29,30 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 public class RcvGridAdapter extends BaseAdapter {
-    private  static  final String  TAG = "andrcvs";
+    private   static  final String  TAG = "andrcvs";
     //private  View  m_view;
-    private  Context mContext;
+    private   Context mContext;
     //private  int ht;
-    private  int wt;
-    private  int n_mats;
-    public    List<Mat> mat_show_rpcs;
+    private   int wt;
+    private   int n_mats;
+    public    Vector<Mat>  mat_show_rpcs;
 
-    public RcvGridAdapter(Context c, int w, int h, int n) {
+    public RcvGridAdapter(Context c, int w, int h) {
         mContext = c;
         wt = w;
         //ht = h;
+        //n_mats = n;
+        mat_show_rpcs = new Vector<Mat>();
+        //for (int i=0; i<n_mats; i++){
+            //mat_show_rpcs.add(new Mat());
+       // }
+    }
+
+    public  void  set_n_mats(int n) {
         n_mats = n;
-        mat_show_rpcs = new ArrayList<Mat>();
-        for (int i=0; i<n_mats; i++){
-            mat_show_rpcs.add(new Mat());
-        }
     }
 
     public static Mat image_resize(Mat mat_src, int wh) {
@@ -68,26 +73,8 @@ public class RcvGridAdapter extends BaseAdapter {
             dw01 = dw * scale;
         }
 
-        Imgproc.resize(mat_src, mat_resize, new Size(dw01, dh01));
+        Imgproc.resize(mat_src, mat_resize, new Size(dw01+0.5, dh01+0.5), 0.0, 0.0, Imgproc.INTER_CUBIC );
         return mat_resize;
-    }
-
-    private static String get_local_ip(){
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                 en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        return inetAddress.getHostAddress().toString();
-                    }
-                }
-            }
-        } catch (SocketException ex){
-            Log.e(TAG, ex.toString());
-        }
-        return null;
     }
 
     public static RcvSerAdd get_ser_ipv4() {
@@ -178,7 +165,7 @@ public class RcvGridAdapter extends BaseAdapter {
         {
             imageView = new ImageView(mContext);
             imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            int  wh = (int)((wt*0.8)/3.0 + 0.5);
+            int  wh = (int)((wt*0.7)/3.0 + 0.5);
             imageView.setLayoutParams(new GridView.LayoutParams( wh,  wh));
         }
         else // Re-use the view
@@ -186,14 +173,21 @@ public class RcvGridAdapter extends BaseAdapter {
             imageView = (ImageView) convertView;
         }
 
-        Mat   mat_show = mat_show_rpcs.get(position);
-        if (mat_show.cols()==0 || mat_show.rows()==0) {
+        Mat   mat_show = null;
+        synchronized(mat_show_rpcs) {
+            if (mat_show_rpcs.size() > position){
+                mat_show = mat_show_rpcs.get(position);
+            }
+        }
+
+        //if (mat_show.cols()==0 || mat_show.rows()==0) {
+        if (mat_show == null) {
             imageView.setImageResource(R.drawable.test01);
         }
         else {
-            int  wh_re = (int)((wt*0.8)/3.0 + 0.5);
+            int  wh_re = (int)((wt*0.7)/3.0 + 0.5);
             Mat   mat_resize = RcvGridAdapter.image_resize(mat_show, wh_re);
-            Bitmap bmp_show = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.RGB_565);
+            Bitmap bmp_show = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mat_resize, bmp_show);
             imageView.setImageBitmap(bmp_show);
         }
