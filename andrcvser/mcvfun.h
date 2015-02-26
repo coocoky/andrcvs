@@ -56,17 +56,13 @@ struct  LlcData
     float   llc_weight[MWH][MWH][KNN];
 };
 
-void  make_datas(string path);
-Mat   surf_hist_120(Mat  &image, Ptr<DescriptorExtractor>  &extractor, float angle, int  size_surf);
-bool  calc_fs_hist(Mat  &image, Mat &vocabulary,  Mat &sum_query_descriptor, int  kp_size);
 bool  voc_bow_mats(Mat  &image,  Mat &vocabulary,  Mat &voc_matchs, Mat &main_hist, Mat &voc_hists, Mat &mat_mask, LlcData *p_llc_data);
-bool  voc_hist(Mat  &img_src,  Mat &vocabulary,  Mat &voc_matchs, Mat &voc_hist, float angle, int kp_size);
-bool  voc_hist_120(Mat  &img_src,  Mat &vocabulary,  Mat &voc_matchs, Mat &voc_hist, int kp_size);
 void  opencv_llc_bow_Descriptor(Mat &image, Mat &vocabulary,  vector<KeyPoint> &key_points, Mat &mat_llc_descriptor );
 void  opencv_llc_bow_mats(Mat &image, Mat &vocabulary, Mat &mat_mask, Mat  &descriptors, LlcData *p_llc_data);
 void  list_dirs( const string& directory, vector<string>  &entries);
 void  list_files(vector<string>  &dir_paths, vector<string>  &file_paths);
 void  list_images(vector<string>  &file_paths,  vector<string>  &image_paths);
+
 void  create_imgs_db(string  &sqlite_fn);
 bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, Mat &main_hist, Mat &mat_mask, LlcData *p_llc_data);
 bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc_matchs, string  &str_im_fn,  Mat &main_hist, Mat &voc_hists);

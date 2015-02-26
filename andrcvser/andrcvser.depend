@@ -14544,7 +14544,7 @@
 	<boost/shared_ptr.hpp>
 	<thrift/transport/TBufferTransports.h>
 
-1424680330 d:\githubprjs\andrcvs\andrcvser\mcvfun.h
+1424876030 d:\githubprjs\andrcvs\andrcvser\mcvfun.h
 	<opencv2/opencv.hpp>
 	<opencv2/nonfree/nonfree.hpp>
 	<string>
@@ -14761,7 +14761,7 @@
 	"wx/string.h"
 	"wx/filefn.h"
 
-1424680587 source:d:\githubprjs\andrcvs\andrcvser\mcvfun.cpp
+1424875873 source:d:\githubprjs\andrcvs\andrcvser\mcvfun.cpp
 	"mcvfun.h"
 	<stdio.h>
 
