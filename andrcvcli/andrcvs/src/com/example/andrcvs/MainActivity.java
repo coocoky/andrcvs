@@ -85,7 +85,7 @@ class CompratorByLastModified implements Comparator<File>
 
 public class MainActivity extends Activity {
 
-    Bundle   mState;
+    //Bundle   mState;
     //Bitmap   bitmap_share;
     Mat      mat_share;
     int      wt,ht;
@@ -110,7 +110,8 @@ public class MainActivity extends Activity {
         ht = displaymetrics.heightPixels;
         wt = displaymetrics.widthPixels;
 
-        mState = savedInstanceState;
+        //mState = savedInstanceState;
+        mat_share = null;
     }
 
 
@@ -174,7 +175,7 @@ public class MainActivity extends Activity {
                 {
                     init_sd_imgs();
 
-                    mat_share = new Mat();
+                    //mat_share = new Mat();
                     Bitmap   bitmap_share = null;
 
                     Intent intent = getIntent();
@@ -191,14 +192,20 @@ public class MainActivity extends Activity {
 
                     Fragment fragment =  new GalleryFragment();
 
-                    if (bitmap_share != null) {
+                    if ( mat_share == null && bitmap_share != null) {
+                        mat_share = new Mat();
                         Utils.bitmapToMat(bitmap_share, mat_share);
-                        fragment =  new RcvGridFragment();
+                    }
+
+                    if (mat_share != null) {
+                        fragment =  new RcvGridFragment(MainActivity.this);
                     }
 
                     //if (mState == null) {
-                        getFragmentManager().beginTransaction().add(R.id.container, fragment).commit();
+                        //getFragmentManager().beginTransaction().add(R.id.container, fragment).commit();
                     //}
+
+                    getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
 
                 } break;
                 default:

@@ -77,68 +77,6 @@ public class RcvGridAdapter extends BaseAdapter {
         return mat_resize;
     }
 
-    public static RcvSerAdd get_ser_ipv4() {
-        try {
-            int server_port = 9092;
-            DatagramSocket s = new DatagramSocket();
-            s.setBroadcast(true);
-            s.setSoTimeout(800);
-            int android_port = s.getLocalPort();
-
-            RcvSerAdd  rcv_ser_add = new RcvSerAdd();
-            JSONObject object = new JSONObject();
-            //String  str_ip = RcvGridAdapter.get_local_ip();
-
-            try {
-                object.put("name", "cvrpc");
-                //object.put("ipaddress", RcvGridAdapter.get_local_ip());
-                object.put("ipaddress", "0.0.0.0");
-                object.put("port", android_port);
-            } catch (JSONException e) {
-                Log.d("debug", e.toString());
-            }
-
-            // broadcast discovery packet using current network details
-            //InetAddress local = InetAddress.getByName("255.255.255.255");
-            InetAddress local = InetAddress.getByName("192.168.0.255");
-            Log.d("debug", object.toString());
-            //Log.d("debug", local.getHostAddress().toString());
-
-            int msg_length = object.toString().length();
-            byte[] message = object.toString().getBytes();
-            DatagramPacket p = new DatagramPacket(message, msg_length, local, server_port);
-            s.send(p);
-
-            byte[] buffer = new byte[256];
-
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            s.receive(packet);
-            s.close();
-
-            String str_temp = new String(packet.getData() , packet.getOffset() , packet.getLength());
-            String  str_ser_name = new String();
-
-            try {
-                JSONObject json_serip = new JSONObject(str_temp);
-                rcv_ser_add.ip_v4 = json_serip.getString("ipv4");
-                rcv_ser_add.port = json_serip.getString("port");
-                str_ser_name =  json_serip.getString("name");
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            if (!str_ser_name.equals("cvrpc")) rcv_ser_add = null;
-            return  rcv_ser_add;
-
-        } catch(SocketException e) {
-            Log.d("debug", e.toString());
-        } catch(IOException e) {
-            Log.d("debug", e.toString());
-        }
-        return  null;
-    }
-
     @Override
     public int getCount()
     {

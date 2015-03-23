@@ -52,6 +52,7 @@ public class GalleryFragment extends Fragment {
         grid_view = (GridView) root_view.findViewById(R.id.gridView);
 
         image_adapter.str_fns = new ArrayList<String>();
+        m_activity.mat_share = null;
 
         init_view();
         return  root_view;
@@ -102,7 +103,7 @@ public class GalleryFragment extends Fragment {
 
                 m_activity.mat_share = mat_rgb;
 
-                Fragment fragment =  new RcvGridFragment();
+                Fragment fragment =  new RcvGridFragment(m_activity);
 
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 transaction.replace(R.id.container, fragment);

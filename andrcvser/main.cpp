@@ -202,6 +202,7 @@ private:
     string                m_imgs_path;
     string                m_str_charset;
     string                sqlite_fn;
+    string                m_result_path;
 
     Mat   vocabulary;
     Mat   voc_matchs;
@@ -220,6 +221,8 @@ public:
 
         std::string   vocabulary_file =  voc_fn;
         std::string   voc_matchs_fn = result_path + "/voc_matchs.xml.gz";
+
+        m_result_path = result_path;
 
         sqlite_fn = result_path + "/imgs.db";
 
@@ -338,6 +341,14 @@ public:
         // Your implementation goes here
         //printf("read_image\n");
 
+        string  str_rewh = pa.at("wh");
+        string  str_quality_jpg = pa.at("jpg");
+
+        int     rewh = atoi(str_rewh.c_str());
+        int     qua_jpg = atoi(str_quality_jpg.c_str());
+
+        //std::cout << "rewh  qua_jpg : " << rewh << "  " << qua_jpg << std::endl;
+
         string  str_fn = "";
 
         if (m_str_charset != "utf-8")
@@ -371,11 +382,36 @@ public:
         MyApp  &app = wxGetApp();
         //wxQueueEvent(&app, event.Clone());
 
-        if (!img_src.data)
+        if (img_src.data == 0 || img_src.rows == 0 || img_src.cols == 0)
         {
             _return.clear();
             return;
         }
+
+        int    width01;
+        int    high01;
+
+        int    *p_l = &width01;
+        int    *p_s = &high01;
+
+        int    img_ls = img_src.cols;
+        int    img_ss = img_src.rows;
+
+        if (img_src.cols < img_src.rows)
+        {
+            p_s =  &width01;
+            p_l =  &high01;
+            img_ls = img_src.rows;
+            img_ss = img_src.cols;
+        }
+
+        *p_l = rewh;
+        float  zoom = *p_l*1.0/img_ls;
+        *p_s = img_ss*zoom + 0.5;
+
+        Mat    image_zoom = Mat::zeros( high01, width01, CV_8UC1);
+
+        resize(img_src, image_zoom, Size(width01, high01), INTER_CUBIC);
 
         vector<uchar>   buf_img;
         vector<int>     params;
@@ -383,9 +419,9 @@ public:
         buf_img.clear();
         params.push_back( cv::IMWRITE_JPEG_QUALITY );
         //params.push_back( 75 );
-        params.push_back( 92 );
+        params.push_back( qua_jpg );
 
-        imencode( ".jpg", img_src, buf_img, params );
+        imencode( ".jpg", image_zoom, buf_img, params );
 
         int  size_buf = buf_img.size();
         char   *p_ch = (char*)(&buf_img[0]);
@@ -434,19 +470,21 @@ public:
         Mat  hists02;
 
         LlcData  *p_llc_data01 = new LlcData;
-        LlcData  *p_llc_data02 = new LlcData;
+        //LlcData  *p_llc_data02 = new LlcData;
 
         memset(p_llc_data01, 0, sizeof(LlcData));
-        memset(p_llc_data02, 0, sizeof(LlcData));
+        //memset(p_llc_data02, 0, sizeof(LlcData));
 
         bool ret01 = voc_bow_mats(image01, vocabulary, voc_matchs, main_hist01, hists01, main_mask01, p_llc_data01);
 
         //std::cout << "main_hist01 rows cols = " << main_hist01.rows << "  " << main_hist01.cols << std::endl;
         //std::cout << "main_hists rows cols = " << main_hists.rows << "  " << main_hists.cols << std::endl;
 
+        delete  p_llc_data01;
+
         if (ret01 == false) return;
 
-        int     mknn = 32;
+        int     mknn = 32*2;
         //float   fbeta = 1e-4;
 
         vector<vector<DMatch> > matches;
@@ -478,9 +516,13 @@ public:
             }
         }
 
-        multimap<double, string, greater<double> >  map_hists;
+        multimap<double, string, greater<double> >  map_hists_bow;
 
-        sort_match_imgs(sqlite_fn, vocabulary, voc_matchs, hists01, hashs_knn, map_hists);
+        sort_match_imgs(sqlite_fn, vocabulary, m_result_path, voc_matchs, hists01, hashs_knn, map_hists_bow);
+
+        multimap<double, string, greater<double> >  map_hists_120;
+
+        sort_surf120_imgs(image01, sqlite_fn, m_imgs_path, hashs_knn, map_hists_120);
 
         double time_e = (double)getTickCount();
         double time_knn = (time_e - time_b)/getTickFrequency()*1000.0;
@@ -495,27 +537,70 @@ public:
         MyApp  &app = wxGetApp();
         wxQueueEvent(&app, event.Clone());
 
+        set<string>       fn_set;
+        map<int, string>  fn_map;
+
+        int  idx_map = 0;
+
         multimap<double, string, greater<double> >::iterator  iter;
 
-        for (iter = map_hists.begin(); iter != map_hists.end(); iter++)
+        int  n_hist = 1;
+        for (iter = map_hists_120.begin(); iter != map_hists_120.end(); iter++)
         {
             double  distance_hists = iter->first;
+            string  str_fn = iter->second;
+
+            if (distance_hists > 0.60)
+            {
+                fn_set.insert(str_fn);
+                fn_map[idx_map++] = str_fn;
+            }
+
+            char   chbuf[1024];
+            snprintf(chbuf, 1000, "surf: %f  %s", distance_hists, str_fn.c_str());
+            chbuf[1000] = '\0';
+
+            event.SetString(chbuf);
+            wxQueueEvent(&app, event.Clone());
+
+            if (n_hist >= 6) break;
+            n_hist++;
+            //std::cout << distance_hists << "  " << str_fn << std::endl;
+        }
+
+        n_hist = 1;
+        for (iter = map_hists_bow.begin(); iter != map_hists_bow.end(); iter++)
+        {
+            double  distance_hists = iter->first;
+            string  str_fn = iter->second;
+
+            if (distance_hists > 0.25 && fn_set.count(str_fn) == 0)
+            {
+                fn_set.insert(str_fn);
+                fn_map[idx_map++] = str_fn;
+            }
+
+            char   chbuf[1024];
+            snprintf(chbuf, 1000, "bow: %f  %s", distance_hists, str_fn.c_str());
+            chbuf[1000] = '\0';
+
+            event.SetString(chbuf);
+            wxQueueEvent(&app, event.Clone());
+
+            if (n_hist >= 15) break;
+            n_hist++;
+            //std::cout << distance_hists << "  " << str_fn << std::endl;
+        }
+
+        for (map<int, string>::iterator iter = fn_map.begin(); iter != fn_map.end(); iter++)
+        {
             string  str_fn = iter->second;
 
             string  str_utf8_fn;
 
             cc.convert_string(str_fn, str_utf8_fn);
 
-            if (distance_hists > 0.25) _return.push_back(str_utf8_fn);
-
-            char   chbuf[1024];
-            snprintf(chbuf, 1000, "%f  %s", distance_hists, str_fn.c_str());
-            chbuf[1000] = '\0';
-
-            event.SetString(chbuf);
-            wxQueueEvent(&app, event.Clone());
-
-            //std::cout << distance_hists << "  " << str_fn << std::endl;
+            _return.push_back(str_utf8_fn);
         }
 
         event.SetString("........................................");
@@ -673,7 +758,19 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
     list_files(sub_dirs,  file_paths);
     list_images(file_paths,  image_paths);
 
-    //fs_list.open(imgs_fn.c_str(), ios::out);
+    map<string, string>  hash_fn_map;
+    set<string>   fn_set;
+
+    read_db_map(sqlite_fn, hash_fn_map);
+
+    map<string, string>::iterator  iter;
+
+    for (iter = hash_fn_map.begin(); iter != hash_fn_map.end(); iter++)
+    {
+        string  str_fn = iter->second;
+
+        fn_set.insert(str_fn);
+    }
 
     int  size_images = image_paths.size();
 
@@ -707,6 +804,8 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 
         std::cout << "str_fn : " << str_fn << std::endl;
 
+        if (fn_set.count(str_fn) > 0)  continue;
+
         struct stat  fi_stat;
 
         stat(str_path.c_str(), &fi_stat);
@@ -728,9 +827,12 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
         sha.get_digest(digest);
 
         char    ch_uuid[100];
-        sprintf(ch_uuid, "%x%x%x%x%x", digest[0], digest[1], digest[2], digest[3], digest[4]);
+        sprintf(ch_uuid, "%08x%08x%08x%08x%08x", digest[0], digest[1], digest[2], digest[3], digest[4]);
         string  str_hash = ch_uuid;
 
+        if (hash_fn_map.find(str_hash) != hash_fn_map.end()) continue;
+
+        hash_fn_map[str_hash] = str_fn;
         //memmove(&buff[0], p_buf, fi_stat.st_size);
 
         //Mat img_src = imdecode(buff, CV_LOAD_IMAGE_COLOR);
@@ -746,14 +848,24 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 
         bool ret01 = voc_bow_mats(image, vocabulary, voc_matchs, main_hist, hists, main_mask, p_llc_data);
 
-        img_to_db(db, str_hash, str_fn, main_hist,  main_mask, p_llc_data);
-    }
+        /*
+        string   str_fn_hists = result_path;
 
-    //FileStorage fs_hists( hists_fn, FileStorage::WRITE );
-    //if ( fs_hists.isOpened() )  fs_hists << "surf_hists" << descriptors;
+        str_fn_hists += "/";
+        str_fn_hists += str_hash;
+        str_fn_hists += ".xml";
+
+        FileStorage fs_hists( str_fn_hists, FileStorage::WRITE );
+        if ( fs_hists.isOpened() )  fs_hists << "bow_hists" << hists;
+        fs_hists.release();
+        */
+
+        img_to_db(db, str_hash, str_fn, result_path, main_hist, main_mask, p_llc_data);
+    }
 
     delete  p_llc_data;
 
+    //sqlite3_finalize(stmt);
     sqlite3_free(errmsg);
     sqlite3_close(db);
 

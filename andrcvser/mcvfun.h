@@ -36,6 +36,7 @@
 #define  MIN_ZOOM_WH  100
 #define  MIN_KEYS     120
 #define  MIN_KPS      3
+#define  FASTFDP      5
 
 #define  STEP   5
 #define  KNN    5
@@ -64,9 +65,11 @@ void  list_files(vector<string>  &dir_paths, vector<string>  &file_paths);
 void  list_images(vector<string>  &file_paths,  vector<string>  &image_paths);
 
 void  create_imgs_db(string  &sqlite_fn);
-bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, Mat &main_hist, Mat &mat_mask, LlcData *p_llc_data);
-bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc_matchs, string  &str_im_fn,  Mat &main_hist, Mat &voc_hists);
-bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, Mat &voc_matchs, Mat &hists01, std::vector<std::string> &img_match_hashs, multimap<double, string, greater<double> >  &map_hists);
+bool  read_db_map(string &sqlite_fn, map<string, string> &hash_fn_map);
+bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, string &result_path, Mat &main_hist, Mat &mat_mask, LlcData *p_llc_data);
+bool  voc_db_mats(sqlite3 *db, string  &str_im_hash, string  &result_path, Mat &vocabulary,  Mat &voc_matchs, string  &str_im_fn,  Mat &main_hist, Mat &voc_hists);
+bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, string &result_path, Mat &voc_matchs, Mat &hists01, std::vector<std::string> &img_match_hashs, multimap<double, string, greater<double> >  &map_hists);
+bool  sort_surf120_imgs(Mat  &image, string  &sqlite_fn, string  &imgs_path, std::vector<std::string> &img_match_hashs, multimap<double, string, greater<double> >  &map_hists);
 
 class CodeConverter
 {

@@ -24,6 +24,8 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -31,11 +33,18 @@ import org.opencv.core.MatOfInt;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import cvrpc.TranData;
 
@@ -46,13 +55,13 @@ import cvrpc.TranData;
 public class RcvGridFragment extends Fragment {
 
     private Mat  mat_show;
-    private Mat  mat_resize;
+    //private Mat  mat_resize;
     private Mat  mat_rpc;
     private RcvGridAdapter rcv_adapter;
     private String str_ip;
     private int port;
     private List<String> img_fns;
-    private ByteBuffer   img_buf_sort_src;
+    //private ByteBuffer   img_buf_sort_src;
 
     static  final int HANDLER_RPC = 2000;
     static  final int HANDLER_RPC_ERR = 2002;
@@ -62,8 +71,10 @@ public class RcvGridFragment extends Fragment {
     private View          view_frame;
     private GridView      grid_view;
 
-    public RcvGridFragment() {
+    public RcvGridFragment(MainActivity  activity) {
         // Required empty public constructor
+        m_activity = activity;
+        rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht);
     }
 
 
@@ -72,7 +83,7 @@ public class RcvGridFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view_frame = inflater.inflate(R.layout.fragment_rcv_grid, container, false);
-        m_activity = (MainActivity)getActivity();
+        //m_activity = (MainActivity)getActivity();
         mat_show = m_activity.mat_share;
         int  w_re = (int)(m_activity.wt*0.7 + 0.5);
         //mat_resize = RcvGridAdapter.image_resize(mat_show, w_re);
@@ -82,7 +93,7 @@ public class RcvGridFragment extends Fragment {
 
         // Get GridView from xml
         grid_view = (GridView) view_frame.findViewById(R.id.gridView);
-        rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht);
+        //rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht);
         // Set Adapter for GridView
         grid_view.setAdapter(rcv_adapter);
         rcv_adapter.set_n_mats(12);
@@ -98,7 +109,7 @@ public class RcvGridFragment extends Fragment {
         */
 
         rcv_adapter.mat_show_rpcs.clear();
-        //rcv_adapter.mat_show_rpcs = new ArrayList<Mat>();
+        rcv_adapter.mat_show_rpcs = new Vector<Mat>();
         rcv_adapter.mat_show_rpcs.add(mat_rpc);
         rcv_adapter.mat_show_rpcs.add(mat_null_img);
         rcv_adapter.mat_show_rpcs.add(mat_null_img);
@@ -108,8 +119,19 @@ public class RcvGridFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id)
             {
+
+                if (position >= rcv_adapter.mat_show_rpcs.size() ) {
+                    return;
+                }
+
                 m_activity.mat_share = rcv_adapter.mat_show_rpcs.get(position);
-                if ( m_activity.mat_share.cols() == 0 ||  m_activity.mat_share.rows() == 0) return;
+
+                if ( m_activity.mat_share.cols() == 0 ||  m_activity.mat_share.rows() == 0) {
+                    return;
+                }
+
+                rcv_adapter.mat_show_rpcs.clear();
+                rcv_adapter.mat_show_rpcs = new Vector<Mat>();
 
                 Fragment fragment = new ImageShowFragment();
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -127,19 +149,91 @@ public class RcvGridFragment extends Fragment {
         return  view_frame;
     }
 
-    Handler handler_rpc = new Handler() {
+    RcvSerAdd  get_ser_ipv4() {
+        try {
+            int server_port = 9092;
+            DatagramSocket s = new DatagramSocket();
+            s.setBroadcast(true);
+            s.setSoTimeout(800);
+            int android_port = s.getLocalPort();
+
+            RcvSerAdd  rcv_ser_add = new RcvSerAdd();
+            JSONObject object = new JSONObject();
+            //String  str_ip = RcvGridAdapter.get_local_ip();
+
+            try {
+                object.put("name", "cvrpc");
+                //object.put("ipaddress", RcvGridAdapter.get_local_ip());
+                object.put("ipaddress", "0.0.0.0");
+                object.put("port", android_port);
+            } catch (JSONException e) {
+                Log.d("debug", e.toString());
+            }
+
+            // broadcast discovery packet using current network details
+            //InetAddress local = InetAddress.getByName("255.255.255.255");
+            InetAddress local = InetAddress.getByName("192.168.0.255");
+            Log.d("debug", object.toString());
+            //Log.d("debug", local.getHostAddress().toString());
+
+            int msg_length = object.toString().length();
+            byte[] message = object.toString().getBytes();
+            DatagramPacket p = new DatagramPacket(message, msg_length, local, server_port);
+            s.send(p);
+
+            byte[] buffer = new byte[256];
+
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            s.receive(packet);
+            s.close();
+
+            String str_temp = new String(packet.getData() , packet.getOffset() , packet.getLength());
+            String  str_ser_name = new String();
+
+            try {
+                JSONObject json_serip = new JSONObject(str_temp);
+                rcv_ser_add.ip_v4 = json_serip.getString("ipv4");
+                rcv_ser_add.port = json_serip.getString("port");
+                str_ser_name =  json_serip.getString("name");
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            if (!str_ser_name.equals("cvrpc")) rcv_ser_add = null;
+            return  rcv_ser_add;
+
+        } catch(SocketException e) {
+            Log.d("debug", e.toString());
+        } catch(IOException e) {
+            Log.d("debug", e.toString());
+        }
+        return  null;
+    }
+
+    static class MrcvHandler extends Handler {
+        WeakReference<RcvGridFragment>  m_fragment;
+
+        MrcvHandler(RcvGridFragment fragment) {
+            m_fragment = new WeakReference<RcvGridFragment>(fragment);
+        }
+
+        @Override
         public void handleMessage(Message msg) {
+            RcvGridFragment fragment = m_fragment.get();
             switch (msg.what) {
                 case HANDLER_RPC:
-                    rcv_adapter.notifyDataSetChanged();
+                    fragment.rcv_adapter.notifyDataSetChanged();
                     break;
                 case HANDLER_RPC_ERR:
                     String str_txt = msg.getData().getString("debug");
-                    Toast.makeText(m_activity, str_txt, Toast.LENGTH_LONG).show();
+                    Toast.makeText(fragment.m_activity, str_txt, Toast.LENGTH_LONG).show();
                     break;
             }
         }
     };
+
+    MrcvHandler handler_rpc = new MrcvHandler(this);
 
     class  MyException extends Exception
     {
@@ -157,11 +251,12 @@ public class RcvGridFragment extends Fragment {
         new Thread(new Runnable() {
             public void run() {
                 String  str_debug = null;
+                Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test01);
                 //int clientTimeout = 30*1000;
                 TTransport transport;
                 try {
                     //MyApp my_app = (MyApp) getApplication();
-                    rcv_ser_add = RcvGridAdapter.get_ser_ipv4();
+                    rcv_ser_add = get_ser_ipv4();
 
                     if (rcv_ser_add == null) {
                         throw new MyException("get_ser_ipv4 error !!");
@@ -191,14 +286,14 @@ public class RcvGridFragment extends Fragment {
                     List<String> pa_match = new ArrayList<String>();
                     img_fns = client.image_match(img_buf, pa_match);
 
-                    Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test01);
                     Mat  mat_null_img = new Mat();
                     Utils.bitmapToMat(bmp, mat_null_img);
-
                     rcv_adapter.set_n_mats(img_fns.size()+3);
 
                     for (int i=0; i<img_fns.size(); i++){
                         String img_fn = img_fns.get(i);
+                        pa.put("wh","800");
+                        pa.put("jpg","90");
                         img_buf = client.read_image(img_fn, pa);
 
                         byte[] img_bytes_re = new byte[img_buf.remaining()];
@@ -208,7 +303,7 @@ public class RcvGridFragment extends Fragment {
                         mat_bytes.fromArray(img_bytes_re);
 
                         Mat   mat_rcv = new Mat();
-                        if (img_bytes.length != 0) {
+                        if (img_bytes_re.length != 0) {
                             mat_rcv = Highgui.imdecode(mat_bytes, Highgui.CV_LOAD_IMAGE_COLOR);
                             Imgproc.cvtColor(mat_rcv, mat_rcv, Imgproc.COLOR_BGR2RGB);
                         } else {

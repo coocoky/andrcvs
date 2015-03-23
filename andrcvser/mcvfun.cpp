@@ -49,7 +49,7 @@ Mat  surf_hist_120(Mat  &image, Ptr<DescriptorExtractor>  &extractor, float angl
     return  hist;
 }
 
-bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc_matchs, string  &str_im_fn, Mat &main_hist, Mat &voc_hists)
+bool  voc_db_mats(sqlite3 *db, string  &str_im_hash, string  &result_path, Mat &vocabulary,  Mat &voc_matchs, string  &str_im_fn, Mat &main_hist, Mat &voc_hists)
 {
     Mat   voc_hist = Mat::zeros(1, SIZE_VOC, CV_32F);
     Mat   sum_query_descriptor = Mat::zeros(1, VOCA_COLS, CV_32F);
@@ -65,7 +65,7 @@ bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc
 
     char    ch_cmd[2048];
 
-    sprintf(ch_cmd, "SELECT id, imhash, impath, imw, imh, imhist, immask, imidx, imweight FROM imgs WHERE imhash='%s';", str_im_hash.c_str());
+    sprintf(ch_cmd, "SELECT id, imhash, impath, imw, imh, imhist FROM imgs WHERE imhash='%s';", str_im_hash.c_str());
 
     int   result = sqlite3_prepare(db, ch_cmd, -1, &stmt, &zTail);
 
@@ -104,38 +104,25 @@ bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc
 
     mat_mask = Mat::zeros(mrows, mcols, CV_8UC1);
 
-    vector<uchar>  mask_data;
+    string   str_fn_bow = result_path;
 
-    mask_data.clear();
-    mask_data.resize(mat_mask.rows*mat_mask.cols);
+    str_fn_bow += "/bow_";
+    str_fn_bow += str_im_hash;
+    str_fn_bow += ".dat";
 
-    p_data = (char*)(&mask_data[0]);
+    fstream  fs_bow(str_fn_bow.c_str(), ios_base::binary | ios_base::in);
+    fs_bow.read((char*)(p_llc_data->llc_mask), sizeof(p_llc_data->llc_mask));
+    fs_bow.read((char*)(p_llc_data->llc_idx), sizeof(p_llc_data->llc_idx));
+    fs_bow.read((char*)(p_llc_data->llc_weight), sizeof(p_llc_data->llc_weight));
+    fs_bow.close();
 
-    p_buf = sqlite3_column_blob(stmt, 6);
-    size_buf = sqlite3_column_bytes(stmt, 6);
-    memmove(p_data,  p_buf, size_buf);
-
+    for (int r=0; r<mat_mask.rows; r++)
     {
-        int n=0;
-        for (int r=0; r<mat_mask.rows; r++)
+        for (int c=0; c<mat_mask.cols; c++)
         {
-            for (int c=0; c<mat_mask.cols; c++)
-            {
-                mat_mask.at<uchar>(r, c) = mask_data[n];
-                p_llc_data->llc_mask[r][c] = mask_data[n];
-                n++;
-            }
+            mat_mask.at<uchar>(r, c) = p_llc_data->llc_mask[r][c];
         }
     }
-
-
-    p_buf = sqlite3_column_blob(stmt, 7);
-    size_buf = sqlite3_column_bytes(stmt, 7);
-    memmove(&(p_llc_data->llc_idx),  p_buf, size_buf);
-
-    p_buf = sqlite3_column_blob(stmt, 8);
-    size_buf = sqlite3_column_bytes(stmt, 8);
-    memmove(&(p_llc_data->llc_weight),  p_buf, size_buf);
 
     int  wh=MIN_ZOOM_WH/5-1;
 
@@ -145,7 +132,8 @@ bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc
         {
             sum_query_descriptor = Mat::zeros(1, VOCA_COLS, CV_32F);
 
-            int m=0;
+            int m;
+            m = 0;
             for (int y=y0; y<y0+wh; y++)
             {
                 for (int x=x0; x<x0+wh; x++)
@@ -161,7 +149,7 @@ bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc
                 }
             }
 
-            sum_query_descriptor = sum_query_descriptor/(1.0*wh*wh)*1000.0;
+            sum_query_descriptor = sum_query_descriptor/(1.0*m)*1000.0;
 
             int  voc_knn = voc_matchs.cols;
 
@@ -187,11 +175,12 @@ bool  voc_db_mats(sqlite3 *db, string  &str_im_hash,  Mat &vocabulary,  Mat &voc
     delete   p_llc_data;
 
     sqlite3_reset(stmt);
+    sqlite3_finalize(stmt);
 
     return true;
 }
 
-bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, Mat &main_hist, Mat &mat_mask, LlcData *p_llc_data)
+bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, string &result_path, Mat &main_hist, Mat &mat_mask, LlcData *p_llc_data)
 {
     char *errmsg = 0;
     int   ret = 0;
@@ -199,7 +188,7 @@ bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, Mat &mai
     sqlite3_stmt  *stmt;
     const   char  *zTail;
 
-    sqlite3_prepare_v2(db, "insert into imgs(id, imhash, impath, imw, imh, imhist, immask, imidx, imweight) values(null,?,?,?,?,?,?,?,?)", -1, &stmt, 0);
+    sqlite3_prepare_v2(db, "insert into imgs(id, imhash, impath, imw, imh, imhist) values(null,?,?,?,?,?)", -1, &stmt, 0);
 
     sqlite3_bind_text(stmt, 1, str_im_hash.c_str(), str_im_hash.length(), NULL);
     sqlite3_bind_text(stmt, 2, str_im_path.c_str(), str_im_path.length(), NULL);
@@ -219,52 +208,17 @@ bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, Mat &mai
     char   *p_buf = (char*)(&hist_data[0]);
     sqlite3_bind_blob(stmt, 5, p_buf, main_hist.cols*sizeof(float), NULL);
 
-    vector<uchar>  mask_data;
+    string   str_fn_bow = result_path;
 
-    mask_data.clear();
-    mask_data.resize(mat_mask.rows*mat_mask.cols);
+    str_fn_bow += "/bow_";
+    str_fn_bow += str_im_hash;
+    str_fn_bow += ".dat";
 
-    int n=0;
-    for (int r=0; r<mat_mask.rows; r++)
-    {
-        for (int c=0; c<mat_mask.cols; c++)
-        {
-            mask_data[n] = mat_mask.at<uchar>(r, c);
-            n++;
-        }
-    }
-
-    p_buf = (char*)(&mask_data[0]);
-    sqlite3_bind_blob(stmt, 6, p_buf, mask_data.size()*sizeof(uchar), NULL);
-
-
-    vector<float>  idx_data;
-    idx_data.clear();
-    idx_data.resize(MWH*MWH*KNN);
-
-    vector<float>  weight_data;
-    weight_data.clear();
-    weight_data.resize(MWH*MWH*KNN);
-
-    n=0;
-    for (int r=0; r<MWH; r++)
-    {
-        for (int c=0; c<MWH; c++)
-        {
-            for (int i=0; i<KNN; i++)
-            {
-                idx_data[n] = p_llc_data->llc_idx[r][c][i];
-                weight_data[n] = p_llc_data->llc_weight[r][c][i];
-                n++;
-            }
-        }
-    }
-
-    p_buf = (char*)(&idx_data[0]);
-    sqlite3_bind_blob(stmt, 7, p_buf, idx_data.size()*sizeof(float), NULL);
-
-    p_buf = (char*)(&weight_data[0]);
-    sqlite3_bind_blob(stmt, 8, p_buf, weight_data.size()*sizeof(float), NULL);
+    fstream  fs_bow(str_fn_bow.c_str(), ios_base::binary | ios_base::out);
+    fs_bow.write((char*)(p_llc_data->llc_mask), sizeof(p_llc_data->llc_mask));
+    fs_bow.write((char*)(p_llc_data->llc_idx), sizeof(p_llc_data->llc_idx));
+    fs_bow.write((char*)(p_llc_data->llc_weight), sizeof(p_llc_data->llc_weight));
+    fs_bow.close();
 
     int  ret_db = sqlite3_step(stmt);
 
@@ -283,7 +237,7 @@ bool  img_to_db(sqlite3 *db, string  &str_im_hash, string &str_im_path, Mat &mai
 
 bool  voc_bow_mats(Mat  &image,  Mat &vocabulary,  Mat &voc_matchs, Mat &main_hist, Mat &voc_hists, Mat &mat_mask, LlcData *p_llc_data)
 {
-    FastFeatureDetector  fast_detector(10);
+    FastFeatureDetector  fast_detector(FASTFDP);
 
     main_hist = Mat::zeros(1, SIZE_VOC, CV_32F);
 
@@ -358,6 +312,7 @@ bool  voc_bow_mats(Mat  &image,  Mat &vocabulary,  Mat &voc_matchs, Mat &main_hi
 
     Mat  sum_query_descriptor = Mat::zeros(1, VOCA_COLS, CV_32F);
 
+    int m=0;
     for (int y=0; y<mat_mask.rows; y++)
     {
         for (int x=0; x<mat_mask.cols; x++)
@@ -369,10 +324,11 @@ bool  voc_bow_mats(Mat  &image,  Mat &vocabulary,  Mat &voc_matchs, Mat &main_hi
                 int idx = p_llc_data->llc_idx[y][x][n]+0.5;
                 sum_query_descriptor.at<float>(0, idx) += p_llc_data->llc_weight[y][x][n];
             }
+            m++;
         }
     }
 
-    sum_query_descriptor = sum_query_descriptor/(1.0*mat_mask.rows*mat_mask.cols)*1000.0;
+    sum_query_descriptor = sum_query_descriptor/(1.0*m)*1000.0;
 
     int  voc_knn = voc_matchs.cols;
 
@@ -401,7 +357,7 @@ bool  voc_bow_mats(Mat  &image,  Mat &vocabulary,  Mat &voc_matchs, Mat &main_hi
 
             //Mat    image_debug = image_zoom.clone();
 
-            int  m=0;
+            m = 0;
             for (int y=y0; y<y0+wh; y++)
             {
                 for (int x=x0; x<x0+wh; x++)
@@ -422,7 +378,7 @@ bool  voc_bow_mats(Mat  &image,  Mat &vocabulary,  Mat &voc_matchs, Mat &main_hi
 
             //imwrite(ch_txt, image_debug);
 
-            sum_query_descriptor = sum_query_descriptor/(1.0*wh*wh)*1000.0;
+            sum_query_descriptor = sum_query_descriptor/(1.0*m)*1000.0;
 
             int  voc_knn = voc_matchs.cols;
 
@@ -523,12 +479,13 @@ void  opencv_llc_bow_mats(Mat &image, Mat &vocabulary, Mat &mat_mask, Mat  &desc
 
         w_mat = w_mat.t();
 
+        int  x = key_points[icx].pt.x/5;
+        int  y = key_points[icx].pt.y/5;
+
+        p_llc_data->llc_mask[y][x] = mat_mask.at<uchar>(y,x);
+
         for (int i=0; i<knn; i++)
         {
-            int  x = key_points[icx].pt.x/5;
-            int  y = key_points[icx].pt.y/5;
-
-            p_llc_data->llc_mask[y][x] = mat_mask.at<uchar>(y,x);
             int  idx = matchesv[i].trainIdx;
             p_llc_data->llc_idx[y][x][i] = idx;
             p_llc_data->llc_weight[y][x][i] = w_mat.at<float>(0,i);
@@ -674,7 +631,7 @@ void  list_files(vector<string>  &dir_paths, vector<string>  &file_paths)
 
 void  create_imgs_db(string  &sqlite_fn)
 {
-    const char *sql_create_table="create table imgs(id INTEGER PRIMARY KEY AUTOINCREMENT, imhash text, impath text, imw INTEGER, imh INTEGER, imhist blob, immask blob, imidx blob, imweight blob)";
+    const char *sql_create_table="create table imgs(id INTEGER PRIMARY KEY AUTOINCREMENT, imhash text, impath text, imw INTEGER, imh INTEGER, imhist blob)";
     char *errmsg = 0;
     int   ret = 0;
 
@@ -716,7 +673,7 @@ void  create_imgs_db(string  &sqlite_fn)
     printf("Close database\n");
 }
 
-bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, Mat &voc_matchs, Mat &hists01, std::vector<std::string> &img_match_hashs, multimap<double, string, greater<double> >  &map_hists)
+bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, string &result_path, Mat &voc_matchs, Mat &hists01, std::vector<std::string> &img_match_hashs, multimap<double, string, greater<double> >  &map_hists)
 {
     sqlite3_stmt *stmt;
     char  ca[255];
@@ -725,7 +682,7 @@ bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, Mat &voc_matchs, Mat 
     int   ret_db = 0;
 
     sqlite3 *db = 0;
-    ret_db = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+    ret_db = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READONLY, NULL);
 
     for (int i=0; i<img_match_hashs.size(); i++)
     {
@@ -736,9 +693,9 @@ bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, Mat &voc_matchs, Mat 
         //Mat  main_mask02;
         Mat  hists02;
 
-        voc_db_mats(db, str_hash02, vocabulary, voc_matchs, str_fn02, main_hist02, hists02);
+        voc_db_mats(db, str_hash02, result_path, vocabulary, voc_matchs, str_fn02, main_hist02, hists02);
 
-        if (hists01.rows == 0 || hists02.rows == 0) return false;
+        if (hists02.rows == 0) continue;
 
         //std::cout << "str_fn02 : " << str_fn02 << std::endl;
 
@@ -770,6 +727,133 @@ bool  sort_match_imgs(string  &sqlite_fn, Mat &vocabulary, Mat &voc_matchs, Mat 
         map_hists.insert(multimap<double, string, greater<double> >::value_type(average_distance, str_fn02));
     }
 
+    //sqlite3_finalize(stmt);
+    sqlite3_close(db);
+
+    return true;
+}
+
+bool  sort_surf120_imgs(Mat  &image, string  &sqlite_fn,  string  &imgs_path, std::vector<std::string> &img_match_hashs, multimap<double, string, greater<double> >  &map_hists)
+{
+    Ptr<DescriptorExtractor> extractor = DescriptorExtractor::create( "SURF" );
+
+    Mat   image_120 = Mat::zeros(120, 120, CV_8UC1);
+
+    resize(image, image_120, Size(120, 120));
+
+    Mat   hist01 = surf_hist_120(image_120,  extractor, 0.0, 15);
+
+    double  hw01 = image.rows*1.0/image.cols;
+
+    sqlite3_stmt  *stmt;
+    char          ca[255];
+    const  char   *zTail;
+
+    char  *errmsg = 0;
+    int   ret_db = 0;
+
+    sqlite3 *db = 0;
+    ret_db = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READONLY, NULL);
+
+    for (int i=0; i<img_match_hashs.size(); i++)
+    {
+        string  str_hash02 = img_match_hashs[i];
+
+        char    ch_cmd[2048];
+
+        sprintf(ch_cmd, "SELECT id, impath FROM imgs WHERE imhash='%s';", str_hash02.c_str());
+
+        int   result = sqlite3_prepare(db, ch_cmd, -1, &stmt, &zTail);
+
+        result = sqlite3_step(stmt);
+
+        if (result != SQLITE_ROW ) break;
+
+        int             id = sqlite3_column_int( stmt, 0 );
+        const char* impath = (char*)sqlite3_column_text( stmt, 1 );
+
+        string   str_fn02 = impath;
+        string   str_path02 = imgs_path + str_fn02;
+
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
+
+        Mat image02 = imread(str_path02, CV_LOAD_IMAGE_GRAYSCALE);
+
+        if (image02.rows == 0 || image02.cols == 0) continue ;
+
+        double  hw02 = image02.rows*1.0/image02.cols;
+
+        double  hws = hw01;
+        double  hwg = hw02;
+
+        if (hws>hwg)
+        {
+            double  tmp = hwg;
+            hwg = hws;
+            hws = tmp;
+        }
+
+        double  scale = hws/hwg;
+
+        Mat   image_120_02 = Mat::zeros(120, 120, CV_8UC1);
+
+        resize(image02, image_120_02, Size(120, 120));
+
+        Mat   hist02 = surf_hist_120(image_120_02,  extractor, 0.0, 15);
+
+        double  distance_hist = scale*compareHist(hist01, hist02, CV_COMP_CORREL);
+
+        map_hists.insert(multimap<double, string, greater<double> >::value_type(distance_hist, str_fn02));
+    }
+
+    //sqlite3_finalize(stmt);
+    sqlite3_close(db);
+
+    return true;
+}
+
+bool  read_db_map(string &sqlite_fn, map<string, string> &hash_fn_map)
+{
+    sqlite3_stmt  *stmt;
+    char          ca[255];
+    const  char   *zTail;
+
+    char  *errmsg = 0;
+    int    ret_db = 0;
+
+    sqlite3 *db = 0;
+    int  result = sqlite3_open_v2(sqlite_fn.c_str(), &db, SQLITE_OPEN_READONLY, NULL);
+
+    result = sqlite3_prepare(db, "SELECT id, imhash, impath FROM imgs;", -1, &stmt, &zTail);
+
+    result = sqlite3_step(stmt);
+
+    while( result == SQLITE_ROW )
+    {
+        int id = sqlite3_column_int( stmt, 0 );
+        const char* ch_hash = (char*)sqlite3_column_text( stmt, 1 );
+        const char* ch_fn = (char*)sqlite3_column_text( stmt, 2 );
+
+        string  str_hash = ch_hash;
+        string  str_fn = ch_fn;
+
+        hash_fn_map[str_hash] = str_fn;
+
+        result = sqlite3_step(stmt);
+    }
+
+    map<string, string>::iterator  iter;
+
+    for (iter = hash_fn_map.begin(); iter != hash_fn_map.end(); iter++)
+    {
+            string  str_hash = iter->first;
+            string  str_fn = iter->second;
+
+            std::cout << str_hash << " : " << str_fn << std::endl;
+    }
+
+    sqlite3_finalize(stmt);
     sqlite3_close(db);
 
     return true;
