@@ -17,7 +17,7 @@ class TranDataIf {
   virtual ~TranDataIf() {}
   virtual void hello_string(std::string& _return, const std::string& para) = 0;
   virtual void opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data) = 0;
-  virtual void read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa) = 0;
+  virtual void read_image(std::string& _return, const std::string& file_hash, const std::map<std::string, std::string> & pa) = 0;
   virtual void image_match(std::vector<std::string> & _return, const std::string& img_data, const std::vector<std::string> & pa) = 0;
 };
 
@@ -54,7 +54,7 @@ class TranDataNull : virtual public TranDataIf {
   void opencv_rpc(std::string& /* _return */, const std::string& /* fun_name */, const std::vector<std::string> & /* pa */, const std::string& /* in_data */) {
     return;
   }
-  void read_image(std::string& /* _return */, const std::string& /* file_name */, const std::map<std::string, std::string> & /* pa */) {
+  void read_image(std::string& /* _return */, const std::string& /* file_hash */, const std::map<std::string, std::string> & /* pa */) {
     return;
   }
   void image_match(std::vector<std::string> & /* _return */, const std::string& /* img_data */, const std::vector<std::string> & /* pa */) {
@@ -317,8 +317,8 @@ class TranData_opencv_rpc_presult {
 };
 
 typedef struct _TranData_read_image_args__isset {
-  _TranData_read_image_args__isset() : file_name(false), pa(false) {}
-  bool file_name :1;
+  _TranData_read_image_args__isset() : file_hash(false), pa(false) {}
+  bool file_hash :1;
   bool pa :1;
 } _TranData_read_image_args__isset;
 
@@ -330,22 +330,22 @@ class TranData_read_image_args {
 
   TranData_read_image_args(const TranData_read_image_args&);
   TranData_read_image_args& operator=(const TranData_read_image_args&);
-  TranData_read_image_args() : file_name() {
+  TranData_read_image_args() : file_hash() {
   }
 
   virtual ~TranData_read_image_args() throw();
-  std::string file_name;
+  std::string file_hash;
   std::map<std::string, std::string>  pa;
 
   _TranData_read_image_args__isset __isset;
 
-  void __set_file_name(const std::string& val);
+  void __set_file_hash(const std::string& val);
 
   void __set_pa(const std::map<std::string, std::string> & val);
 
   bool operator == (const TranData_read_image_args & rhs) const
   {
-    if (!(file_name == rhs.file_name))
+    if (!(file_hash == rhs.file_hash))
       return false;
     if (!(pa == rhs.pa))
       return false;
@@ -372,7 +372,7 @@ class TranData_read_image_pargs {
 
 
   virtual ~TranData_read_image_pargs() throw();
-  const std::string* file_name;
+  const std::string* file_hash;
   const std::map<std::string, std::string> * pa;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -601,8 +601,8 @@ class TranDataClient : virtual public TranDataIf {
   void opencv_rpc(std::string& _return, const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data);
   void send_opencv_rpc(const std::string& fun_name, const std::vector<std::string> & pa, const std::string& in_data);
   void recv_opencv_rpc(std::string& _return);
-  void read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa);
-  void send_read_image(const std::string& file_name, const std::map<std::string, std::string> & pa);
+  void read_image(std::string& _return, const std::string& file_hash, const std::map<std::string, std::string> & pa);
+  void send_read_image(const std::string& file_hash, const std::map<std::string, std::string> & pa);
   void recv_read_image(std::string& _return);
   void image_match(std::vector<std::string> & _return, const std::string& img_data, const std::vector<std::string> & pa);
   void send_image_match(const std::string& img_data, const std::vector<std::string> & pa);
@@ -681,13 +681,13 @@ class TranDataMultiface : virtual public TranDataIf {
     return;
   }
 
-  void read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa) {
+  void read_image(std::string& _return, const std::string& file_hash, const std::map<std::string, std::string> & pa) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->read_image(_return, file_name, pa);
+      ifaces_[i]->read_image(_return, file_hash, pa);
     }
-    ifaces_[i]->read_image(_return, file_name, pa);
+    ifaces_[i]->read_image(_return, file_hash, pa);
     return;
   }
 

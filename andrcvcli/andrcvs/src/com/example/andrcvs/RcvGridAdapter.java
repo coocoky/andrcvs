@@ -46,9 +46,6 @@ public class RcvGridAdapter extends BaseAdapter {
         //ht = h;
         //n_mats = n;
         mat_show_rpcs = new Vector<Mat>();
-        //for (int i=0; i<n_mats; i++){
-            //mat_show_rpcs.add(new Mat());
-       // }
     }
 
     public  void  set_n_mats(int n) {
@@ -118,9 +115,8 @@ public class RcvGridAdapter extends BaseAdapter {
             }
         }
 
-        //if (mat_show.cols()==0 || mat_show.rows()==0) {
         if (mat_show == null) {
-            imageView.setImageResource(R.drawable.test01);
+            imageView.setImageResource(R.drawable.opencv_01);
         }
         else {
             int  wh_re = (int)((wt*0.7)/3.0 + 0.5);

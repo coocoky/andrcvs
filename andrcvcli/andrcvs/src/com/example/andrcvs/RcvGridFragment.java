@@ -60,8 +60,7 @@ public class RcvGridFragment extends Fragment {
     private RcvGridAdapter rcv_adapter;
     private String str_ip;
     private int port;
-    private List<String> img_fns;
-    //private ByteBuffer   img_buf_sort_src;
+    private List<String> img_hashs;
 
     static  final int HANDLER_RPC = 2000;
     static  final int HANDLER_RPC_ERR = 2002;
@@ -86,27 +85,18 @@ public class RcvGridFragment extends Fragment {
         //m_activity = (MainActivity)getActivity();
         mat_show = m_activity.mat_share;
         int  w_re = (int)(m_activity.wt*0.7 + 0.5);
-        //mat_resize = RcvGridAdapter.image_resize(mat_show, w_re);
         mat_rpc =  m_activity.mat_share;
-        //if ( mat_rpc.cols() > 480 ||  mat_rpc.rows() > 480 ) mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 480);
         mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 240);
 
         // Get GridView from xml
         grid_view = (GridView) view_frame.findViewById(R.id.gridView);
-        //rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht);
         // Set Adapter for GridView
         grid_view.setAdapter(rcv_adapter);
         rcv_adapter.set_n_mats(12);
 
-        Bitmap  bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test01);
+        Bitmap  bmp = BitmapFactory.decodeResource(getResources(), R.drawable.opencv_01);
         Mat     mat_null_img = new Mat();
         Utils.bitmapToMat(bmp, mat_null_img);
-
-        /*
-        rcv_adapter.mat_show_rpcs.set(0, mat_rpc);
-        rcv_adapter.mat_show_rpcs.set(1, mat_null_img);
-        rcv_adapter.mat_show_rpcs.set(2, mat_null_img);
-        */
 
         rcv_adapter.mat_show_rpcs.clear();
         rcv_adapter.mat_show_rpcs = new Vector<Mat>();
@@ -251,7 +241,7 @@ public class RcvGridFragment extends Fragment {
         new Thread(new Runnable() {
             public void run() {
                 String  str_debug = null;
-                Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test01);
+                Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.opencv_01);
                 //int clientTimeout = 30*1000;
                 TTransport transport;
                 try {
@@ -271,7 +261,7 @@ public class RcvGridFragment extends Fragment {
                     TranData.Client client = new TranData.Client(protocol);
                     transport.open();
 
-                    MatOfInt params90 = new MatOfInt(Highgui.IMWRITE_JPEG_QUALITY, 97);
+                    MatOfInt params90 = new MatOfInt(Highgui.IMWRITE_JPEG_QUALITY, 92);
                     MatOfByte buff90 = new MatOfByte();
 
                     Mat    mat_rgb = new Mat();
@@ -284,14 +274,14 @@ public class RcvGridFragment extends Fragment {
                     //String fun_name = "match";
                     Map<String, String> pa = new HashMap<String, String>();
                     List<String> pa_match = new ArrayList<String>();
-                    img_fns = client.image_match(img_buf, pa_match);
+                    img_hashs = client.image_match(img_buf, pa_match);
 
                     Mat  mat_null_img = new Mat();
                     Utils.bitmapToMat(bmp, mat_null_img);
-                    rcv_adapter.set_n_mats(img_fns.size()+3);
+                    rcv_adapter.set_n_mats(img_hashs.size()+3);
 
-                    for (int i=0; i<img_fns.size(); i++){
-                        String img_fn = img_fns.get(i);
+                    for (int i=0; i<img_hashs.size(); i++){
+                        String img_fn = img_hashs.get(i);
                         pa.put("wh","800");
                         pa.put("jpg","90");
                         img_buf = client.read_image(img_fn, pa);
@@ -312,7 +302,6 @@ public class RcvGridFragment extends Fragment {
                         }
 
                         synchronized(rcv_adapter.mat_show_rpcs) {
-                            //rcv_adapter.mat_show_rpcs.set(i+3, mat_rcv);
                             rcv_adapter.mat_show_rpcs.add(mat_rcv);
                         }
 

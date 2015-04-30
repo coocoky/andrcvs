@@ -73,7 +73,7 @@ public class ImageAdapter extends BaseAdapter {
             imageView = (ImageView) convertView;
         }
 
-        imageView.setImageResource(R.drawable.test01);
+        imageView.setImageResource(R.drawable.opencv_01);
         if (position >= str_fns.size() )  return imageView;
 
         String  str_fn = str_path + str_fns.get(position);

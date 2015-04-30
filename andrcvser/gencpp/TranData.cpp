@@ -467,8 +467,8 @@ uint32_t TranData_read_image_args::read(::apache::thrift::protocol::TProtocol* i
     {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->file_name);
-          this->__isset.file_name = true;
+          xfer += iprot->readString(this->file_hash);
+          this->__isset.file_hash = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -513,8 +513,8 @@ uint32_t TranData_read_image_args::write(::apache::thrift::protocol::TProtocol* 
   oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("TranData_read_image_args");
 
-  xfer += oprot->writeFieldBegin("file_name", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString(this->file_name);
+  xfer += oprot->writeFieldBegin("file_hash", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->file_hash);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("pa", ::apache::thrift::protocol::T_MAP, 2);
@@ -546,8 +546,8 @@ uint32_t TranData_read_image_pargs::write(::apache::thrift::protocol::TProtocol*
   oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("TranData_read_image_pargs");
 
-  xfer += oprot->writeFieldBegin("file_name", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString((*(this->file_name)));
+  xfer += oprot->writeFieldBegin("file_hash", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString((*(this->file_hash)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("pa", ::apache::thrift::protocol::T_MAP, 2);
@@ -1055,19 +1055,19 @@ void TranDataClient::recv_opencv_rpc(std::string& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "opencv_rpc failed: unknown result");
 }
 
-void TranDataClient::read_image(std::string& _return, const std::string& file_name, const std::map<std::string, std::string> & pa)
+void TranDataClient::read_image(std::string& _return, const std::string& file_hash, const std::map<std::string, std::string> & pa)
 {
-  send_read_image(file_name, pa);
+  send_read_image(file_hash, pa);
   recv_read_image(_return);
 }
 
-void TranDataClient::send_read_image(const std::string& file_name, const std::map<std::string, std::string> & pa)
+void TranDataClient::send_read_image(const std::string& file_hash, const std::map<std::string, std::string> & pa)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("read_image", ::apache::thrift::protocol::T_CALL, cseqid);
 
   TranData_read_image_pargs args;
-  args.file_name = &file_name;
+  args.file_hash = &file_hash;
   args.pa = &pa;
   args.write(oprot_);
 
@@ -1323,7 +1323,7 @@ void TranDataProcessor::process_read_image(int32_t seqid, ::apache::thrift::prot
 
   TranData_read_image_result result;
   try {
-    iface_->read_image(result.success, args.file_name, args.pa);
+    iface_->read_image(result.success, args.file_hash, args.pa);
     result.__isset.success = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {

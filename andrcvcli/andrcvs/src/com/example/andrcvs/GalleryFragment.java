@@ -45,7 +45,7 @@ public class GalleryFragment extends Fragment {
         root_view = inflater.inflate(R.layout.fragment_gallery, container, false);
         m_activity = (MainActivity)getActivity();
 
-        image_adapter = new ImageAdapter(m_activity, m_activity.wt, m_activity.ht, 12);
+        image_adapter = new ImageAdapter(m_activity, m_activity.wt, m_activity.ht, 15);
 
         // Get GridView from xml
         //final GridView grid_view = (GridView) findViewById(R.id.gridView);
