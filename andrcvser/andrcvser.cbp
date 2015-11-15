@@ -13,7 +13,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
-					<Add directory="include" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -23,7 +22,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -32,42 +30,36 @@
 		</Build>
 		<Compiler>
 			<Add option="-march=core2" />
-			<Add option="-fexceptions" />
-			<Add option="-fpermissive" />
-			<Add option="-D_WIN32_WINNT=0x0501" />
-			<Add option="-DWINVER=0x0501" />
-			<Add option="-DUSE_BOOST_THREAD" />
-			<Add option="-DMINGW" />
+			<Add option="-O2" />
+			<Add directory="include" />
 			<Add directory="gencpp" />
-			<Add directory="../../../mrcvlibs/boost_155/include" />
-			<Add directory="../../../mrcvlibs/OpenCV_2.4/include" />
-			<Add directory="../../../mrcvlibs/include/wx-3.0" />
-			<Add directory="../../../mrcvlibs/lib/wx/include/msw-unicode-3.0" />
-			<Add directory="../../../mrcvlibs/include" />
+			<Add directory="../../../msys32/mingw32/include/boost" />
+			<Add directory="../../../OpenCV_3.0/include" />
+			<Add directory="../../../msys32/usr/local/include/wx-3.0" />
+			<Add directory="../../../msys32/usr/local/lib/wx/include/msw-unicode-3.0" />
+			<Add directory="../../../msys32/usr/local/include" />
+			<Add directory="../../../msys32/mingw32/include" />
 		</Compiler>
 		<Linker>
-			<Add option="-lboost_system-mgw48-mt-d-1_55" />
-			<Add option="-lboost_thread-mgw48-mt-sd-1_55" />
-			<Add option="-lsqlite3" />
-			<Add option="-liconv" />
-			<Add library="..\..\..\mrcvlibs\lib\libthrift.a" />
-			<Add library="..\..\..\mrcvlibs\lib\libthriftnb.a" />
-			<Add library="..\..\..\mrcvlibs\lib\libevent.a" />
-			<Add library="..\..\..\mrcvlibs\lib\libwx_baseu-3.0.dll.a" />
-			<Add library="..\..\..\mrcvlibs\lib\libwx_mswu_core-3.0.dll.a" />
-			<Add library="..\..\..\mrcvlibs\lib\libws2_32.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_core2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_features2d2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_flann2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_highgui2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_imgproc2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_legacy2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_ml2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_nonfree2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_objdetect2410.dll.a" />
-			<Add library="..\..\..\mrcvlibs\OpenCV_2.4\lib\libopencv_photo2410.dll.a" />
-			<Add directory="../../../mrcvlibs/boost_155/lib" />
-			<Add directory="../../../mrcvlibs/lib" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_core300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_features2d300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_imgcodecs300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_imgproc300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_ml300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_objdetect300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_xfeatures2d300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_ximgproc300.dll.a" />
+			<Add library="..\..\..\OpenCV_3.0\x86\mingw\lib\libopencv_highgui300.dll.a" />
+			<Add library="..\..\..\msys32\usr\local\lib\libthrift.a" />
+			<Add library="..\..\..\msys32\usr\local\lib\libthriftnb.a" />
+			<Add library="..\..\..\msys32\mingw32\lib\libsqlite3.a" />
+			<Add library="..\..\..\msys32\mingw32\lib\libevent.dll.a" />
+			<Add library="..\..\..\msys32\usr\local\lib\libwx_baseu-3.0.dll.a" />
+			<Add library="..\..\..\msys32\usr\local\lib\libwx_mswu_core-3.0.dll.a" />
+			<Add library="..\..\..\msys32\mingw32\lib\libboost_thread-mt.dll.a" />
+			<Add library="..\..\..\msys32\mingw32\lib\libboost_system-mt.dll.a" />
+			<Add library="..\..\..\msys32\mingw32\i686-w64-mingw32\lib\libws2_32.a" />
+			<Add library="..\..\..\msys32\mingw32\i686-w64-mingw32\lib\libmsvcrt.a" />
 		</Linker>
 		<Unit filename="gencpp/TranData.cpp" />
 		<Unit filename="gencpp/TranData.h" />
@@ -75,11 +67,13 @@
 		<Unit filename="gencpp/cvrpc_constants.h" />
 		<Unit filename="gencpp/cvrpc_types.cpp" />
 		<Unit filename="gencpp/cvrpc_types.h" />
+		<Unit filename="include/TranDataHandler.h" />
+		<Unit filename="include/mcvfun.h" />
+		<Unit filename="include/myapp.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="mcvfun.cpp" />
-		<Unit filename="mcvfun.h" />
-		<Unit filename="myapp.cpp" />
-		<Unit filename="myapp.h" />
+		<Unit filename="src/TranDataHandler.cpp" />
+		<Unit filename="src/mcvfun.cpp" />
+		<Unit filename="src/myapp.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />
