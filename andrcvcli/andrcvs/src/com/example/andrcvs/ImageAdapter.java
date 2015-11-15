@@ -13,10 +13,8 @@ import android.widget.ImageView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,7 +75,7 @@ public class ImageAdapter extends BaseAdapter {
         if (position >= str_fns.size() )  return imageView;
 
         String  str_fn = str_path + str_fns.get(position);
-        Mat mat_show = Highgui.imread(str_fn);
+        Mat mat_show = Imgcodecs.imread(str_fn);
 
         if (mat_show != null) {
             Imgproc.cvtColor(mat_show, mat_show, Imgproc.COLOR_BGR2RGB);

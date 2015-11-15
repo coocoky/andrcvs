@@ -100,7 +100,7 @@ public class RcvGridAdapter extends BaseAdapter {
         {
             imageView = new ImageView(mContext);
             imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            int  wh = (int)((wt*0.7)/3.0 + 0.5);
+            int  wh = (int)((wt*0.8)/3.0 + 0.5);
             imageView.setLayoutParams(new GridView.LayoutParams( wh,  wh));
         }
         else // Re-use the view
@@ -119,7 +119,7 @@ public class RcvGridAdapter extends BaseAdapter {
             imageView.setImageResource(R.drawable.opencv_01);
         }
         else {
-            int  wh_re = (int)((wt*0.7)/3.0 + 0.5);
+            int  wh_re = (int)((wt*0.8)/3.0 + 0.5);
             Mat   mat_resize = RcvGridAdapter.image_resize(mat_show, wh_re);
             Bitmap bmp_show = Bitmap.createBitmap(mat_resize.cols(), mat_resize.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mat_resize, bmp_show);

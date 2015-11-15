@@ -1,9 +1,8 @@
 package com.example.andrcvs;
 
-
+import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,13 +11,11 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import org.opencv.core.Mat;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -94,7 +91,7 @@ public class GalleryFragment extends Fragment {
                 if (position >= image_adapter.str_fns.size()) return;
 
                 String  str_fn = image_adapter.str_path + image_adapter.str_fns.get(position);
-                Mat mat_rgb = Highgui.imread(str_fn);
+                Mat mat_rgb = Imgcodecs.imread(str_fn);
                 if (mat_rgb == null) return;
 
                 Imgproc.cvtColor(mat_rgb, mat_rgb, Imgproc.COLOR_BGR2RGB);

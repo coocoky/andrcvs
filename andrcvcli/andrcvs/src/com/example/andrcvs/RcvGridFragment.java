@@ -1,8 +1,11 @@
 package com.example.andrcvs;
 
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.DhcpInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
@@ -30,7 +33,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfInt;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
@@ -39,6 +42,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,12 +74,28 @@ public class RcvGridFragment extends Fragment {
     private View          view_frame;
     private GridView      grid_view;
 
-    public RcvGridFragment(MainActivity  activity) {
+    public RcvGridFragment() {
+        // Required empty public constructor
+    }
+
+    RcvGridFragment(MainActivity activity) {
         // Required empty public constructor
         m_activity = activity;
         rcv_adapter = new RcvGridAdapter(m_activity, m_activity.wt, m_activity.ht);
     }
 
+    public static InetAddress getBroadcastAddress(Context context) throws UnknownHostException {
+        WifiManager wifi = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo dhcp = wifi.getDhcpInfo();
+        if(dhcp==null) {
+            return InetAddress.getByName("255.255.255.255");
+        }
+        int broadcast = (dhcp.ipAddress & dhcp.netmask) | ~dhcp.netmask;
+        byte[] quads = new byte[4];
+        for (int k = 0; k < 4; k++)
+            quads[k] = (byte) ((broadcast >> k * 8) & 0xFF);
+        return InetAddress.getByAddress(quads);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -84,7 +104,7 @@ public class RcvGridFragment extends Fragment {
         view_frame = inflater.inflate(R.layout.fragment_rcv_grid, container, false);
         //m_activity = (MainActivity)getActivity();
         mat_show = m_activity.mat_share;
-        int  w_re = (int)(m_activity.wt*0.7 + 0.5);
+        int  w_re = (int)(m_activity.wt*0.75 + 0.5);
         mat_rpc =  m_activity.mat_share;
         mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 240);
 
@@ -162,9 +182,10 @@ public class RcvGridFragment extends Fragment {
 
             // broadcast discovery packet using current network details
             //InetAddress local = InetAddress.getByName("255.255.255.255");
-            InetAddress local = InetAddress.getByName("192.168.0.255");
+            //InetAddress local = InetAddress.getByName("192.168.0.255");
+            InetAddress local = getBroadcastAddress(getActivity().getApplicationContext() );
             Log.d("debug", object.toString());
-            //Log.d("debug", local.getHostAddress().toString());
+            Log.d("debug", local.getHostAddress().toString());
 
             int msg_length = object.toString().length();
             byte[] message = object.toString().getBytes();
@@ -177,7 +198,7 @@ public class RcvGridFragment extends Fragment {
             s.receive(packet);
             s.close();
 
-            String str_temp = new String(packet.getData() , packet.getOffset() , packet.getLength());
+            String  str_temp = new String(packet.getData() , packet.getOffset() , packet.getLength());
             String  str_ser_name = new String();
 
             try {
@@ -261,12 +282,12 @@ public class RcvGridFragment extends Fragment {
                     TranData.Client client = new TranData.Client(protocol);
                     transport.open();
 
-                    MatOfInt params90 = new MatOfInt(Highgui.IMWRITE_JPEG_QUALITY, 92);
+                    MatOfInt params90 = new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 92);
                     MatOfByte buff90 = new MatOfByte();
 
                     Mat    mat_rgb = new Mat();
                     Imgproc.cvtColor(mat_rpc, mat_rgb, Imgproc.COLOR_BGR2RGB);
-                    Highgui.imencode(".jpg", mat_rgb, buff90, params90);
+                    Imgcodecs.imencode(".jpg", mat_rgb, buff90, params90);
 
                     byte[] img_bytes = buff90.toArray();
                     ByteBuffer img_buf = ByteBuffer.wrap(img_bytes);
@@ -294,7 +315,7 @@ public class RcvGridFragment extends Fragment {
 
                         Mat   mat_rcv = new Mat();
                         if (img_bytes_re.length != 0) {
-                            mat_rcv = Highgui.imdecode(mat_bytes, Highgui.CV_LOAD_IMAGE_COLOR);
+                            mat_rcv = Imgcodecs.imdecode(mat_bytes, Imgcodecs.CV_LOAD_IMAGE_COLOR);
                             Imgproc.cvtColor(mat_rcv, mat_rcv, Imgproc.COLOR_BGR2RGB);
                         } else {
                             str_debug = "rcv exception !";

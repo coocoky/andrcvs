@@ -54,11 +54,11 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import static android.os.SystemClock.sleep;
+//import static android.os.SystemClock.sleep;
+
 
 class  RcvSerAdd{
     String  ip_v4;
@@ -153,7 +153,7 @@ public class MainActivity extends Activity {
                         String str_idx = String.format("%04d", idx + 1);
                         String str_fn = str_path + "image_" + str_idx + ".jpg";
                         Imgproc.cvtColor(mat_rgb, mat_rgb, Imgproc.COLOR_BGR2RGB);
-                        Highgui.imwrite(str_fn, mat_rgb);
+                        Imgcodecs.imwrite(str_fn, mat_rgb);
                     }
                 }
             }
@@ -214,7 +214,7 @@ public class MainActivity extends Activity {
     public void onResume()
     {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_8, this, mLoaderCallback);
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
     }
 
     @Override
@@ -231,11 +231,7 @@ public class MainActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     /**
