@@ -275,6 +275,8 @@ void TranDataHandler::image_match(std::vector<std::string> &_return, const std::
     img_zoom_class_hists(image01, vocabulary, voc_matchs, ZOOM_SIZE, class_names, strs_rois_class, class_hists,
                             main_hist01, map_class_hists01);
 
+    if (main_hist01.rows == 0) return;
+
     int     mknn = 32;
     //float   fbeta = 1e-4;
 

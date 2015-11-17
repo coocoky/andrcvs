@@ -1,18 +1,21 @@
                      android thrift rpc opencv servers 
 
 
-  andrcvs android  client  send  a image to andrcvs server, server return n like images.
+  andrcvs android  client send a image to andrcvs server, server return N like images.
 
   compile:
 
-     andrcvs android  client: eclipse android adt open andrcvcli/andrcvs project.
+     andrcvs android client: eclipse android adt open andrcvcli/andrcvs project.
 
-     andrcvs server: Win32/MinGW CodeBlocks open andrcvser andrcvser.cbp.
+     andrcvs server: Win32/MinGW CodeBlocks open andrcvser andrcvser.cbp. :-)
 
-       server requirements: opencv  2.4.x
-                            boost   1.55
+       server requirements: opencv  3.0  and  opencv_contrib  https://github.com/Itseez/opencv_contrib
+                            boost   1.59
                             thrift  0.92 
-                            wxWidgets  3.0
+                            wxWidgets 3.0
+                            sqlite    3.8
+                            
+       recommend  msys2:  https://github.com/msys2/msys2.github.io
 
   simple use:
 
@@ -26,5 +29,5 @@
 
                                                                         email: zhujiangmail@hotmail.com
 
-                                                                               2015.01.08
+                                                                               2015.11.17
 
