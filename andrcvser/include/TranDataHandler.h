@@ -60,7 +60,7 @@ private:
     map<string, Mat>     map_class_vocs;
     Mat                  class_hists;
 
-    int               id_imgs;
+    //int                id_imgs;
 };
 
 #endif // TRANDATAHANDLER_H

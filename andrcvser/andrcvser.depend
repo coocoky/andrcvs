@@ -5465,7 +5465,7 @@
 	<thrift/protocol/TProtocol.h>
 	<boost/shared_ptr.hpp>
 
-1447600596 source:d:\githubprjs\andrcvs\andrcvser\main.cpp
+1448362379 source:d:\githubprjs\andrcvs\andrcvser\main.cpp
 	<cstdio>
 	<cstdlib>
 	"wx/wxprec.h"
@@ -15454,7 +15454,7 @@
 	"wx/arrstr.h"
 	"wx/cmdargs.h"
 
-1447251976 d:\githubprjs\andrcvs\andrcvser\include\trandatahandler.h
+1448362379 d:\githubprjs\andrcvs\andrcvser\include\trandatahandler.h
 	<opencv2/opencv.hpp>
 	<opencv2/xfeatures2d.hpp>
 	<boost/thread.hpp>
@@ -15473,14 +15473,14 @@
 	"TranData.h"
 	<thrift/protocol/TBinaryProtocol.h>
 
-1447597988 source:d:\githubprjs\andrcvs\andrcvser\src\mcvfun.cpp
+1448362915 source:d:\githubprjs\andrcvs\andrcvser\src\mcvfun.cpp
 	"mcvfun.h"
 	<stdio.h>
 
 1447600680 source:d:\githubprjs\andrcvs\andrcvser\src\myapp.cpp
 	"MyApp.h"
 
-1447750367 source:d:\githubprjs\andrcvs\andrcvser\src\trandatahandler.cpp
+1448362379 source:d:\githubprjs\andrcvs\andrcvser\src\trandatahandler.cpp
 	"MyApp.h"
 	"TranDataHandler.h"
 	"mcvfun.h"

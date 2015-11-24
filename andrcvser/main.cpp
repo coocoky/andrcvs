@@ -270,12 +270,17 @@ void  setup(wxString voc_fn01, wxString  imgs_path01, wxString result_path01)
 
     int  pos = voc_fn.rfind("/");
 
-    string  str_class_dir = voc_fn.substr(0, pos);
+    string  str_class_dir01 = voc_fn.substr(0, pos);
+    string  str_class_dir02 = voc_fn.substr(0, pos);
 
-    str_class_dir += "/class";
-    std::cout << "str_class_dir : " << str_class_dir << std::endl;
+    str_class_dir01 += "/class_240";
+    str_class_dir02 += "/class_320";
 
-    read_class_db(str_class_dir, class_names, map_class_vocs, strs_rois_class, class_hists);
+    std::cout << "str_class_dir01 : " << str_class_dir01 << std::endl;
+    std::cout << "str_class_dir02 : " << str_class_dir02 << std::endl;
+
+    read_class_db(str_class_dir01, class_names, map_class_vocs, strs_rois_class, class_hists);
+    read_class_db(str_class_dir02, class_names, map_class_vocs, strs_rois_class, class_hists);
 
     std::cout << "strs_rois_class.size : " << strs_rois_class.size() << std::endl;
     std::cout << "class_hists.rows : " << class_hists.rows << std::endl;

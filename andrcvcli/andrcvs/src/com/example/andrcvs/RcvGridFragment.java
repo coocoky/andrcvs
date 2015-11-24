@@ -105,8 +105,8 @@ public class RcvGridFragment extends Fragment {
         //m_activity = (MainActivity)getActivity();
         mat_show = m_activity.mat_share;
         int  w_re = (int)(m_activity.wt*0.75 + 0.5);
-        mat_rpc =  m_activity.mat_share;
-        mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 240);
+        //mat_rpc =  m_activity.mat_share;
+        mat_rpc = RcvGridAdapter.image_resize( m_activity.mat_share, 320);
 
         // Get GridView from xml
         grid_view = (GridView) view_frame.findViewById(R.id.gridView);
@@ -282,7 +282,7 @@ public class RcvGridFragment extends Fragment {
                     TranData.Client client = new TranData.Client(protocol);
                     transport.open();
 
-                    MatOfInt params90 = new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 92);
+                    MatOfInt params90 = new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 90);
                     MatOfByte buff90 = new MatOfByte();
 
                     Mat    mat_rgb = new Mat();

@@ -7,7 +7,7 @@ TranDataHandler::TranDataHandler(string voc_fn, string  imgs_path, string result
 {
     // Your initialization goes here
 
-    id_imgs = 1;
+    //id_imgs = 1;
 
     std::string   vocabulary_file =  voc_fn;
     std::string   voc_matchs_fn = result_path + "/voc_matchs.xml.gz";
@@ -31,14 +31,18 @@ TranDataHandler::TranDataHandler(string voc_fn, string  imgs_path, string result
     std::cout << "voc_matchs rows cols = " << voc_matchs.rows << "  " << voc_matchs.cols << std::endl;
 
     int  pos = voc_fn.rfind("/");
-    string  str_class_dir = voc_fn.substr(0, pos);
-    str_class_dir += "/class";
 
-    read_class_db(str_class_dir,  class_names, map_class_vocs, strs_rois_class, class_hists);
+    string  str_class_dir01 = voc_fn.substr(0, pos);
+    string  str_class_dir02 = voc_fn.substr(0, pos);
+
+    str_class_dir01 += "/class_240";
+    str_class_dir02 += "/class_320";
+
+    read_class_db(str_class_dir01,  class_names, map_class_vocs, strs_rois_class, class_hists);
+    read_class_db(str_class_dir02,  class_names, map_class_vocs, strs_rois_class, class_hists);
 
     std::cout << "strs_rois_class.size : " << strs_rois_class.size() << std::endl;
     std::cout << "class_hists.rows : " << class_hists.rows << std::endl;
-
 
     string        img_fn;
     string        img_path;

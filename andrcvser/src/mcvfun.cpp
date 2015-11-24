@@ -783,15 +783,6 @@ void  class_bow_save(std::string &file_hash, string  &str_path, set<string>  &cl
 
 void  read_class_db(string &df_path,  set<string>  &class_names,  map<string, Mat>  &map_class_vocs, vector<string>  &strs_rois_class, Mat  &class_hists)
 {
-    for (set<string>::iterator iter = class_names.begin(); iter != class_names.end(); iter++)
-    {
-        string   class_name = *iter;
-
-        Mat      vocs;
-
-        map_class_vocs[class_name] = vocs;
-    }
-
     vector<string>   str_files;
 
     vector<string>   dir_paths;
